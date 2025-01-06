@@ -1,4 +1,6 @@
-import openai  # Or any LLM API you prefer
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))  # Or any LLM API you prefer
 import pandas as pd
 from prompt import NodeManager, PromptManager
 import random
@@ -20,7 +22,6 @@ user_goals = [
     "Update contact information.",
 ]
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 # Function to simulate conversation using LLM
@@ -36,14 +37,12 @@ def simulate_conversation(goal, system_prompt):
     for _ in range(random_turns):
         # User's input
         user_response = (
-            openai.ChatCompletion.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": user_prompt},
-                    *conversation_history,
-                    {"role": "user", "content": "Your turn to respond."},
-                ],
-            )
+            client.chat.completions.create(model=model,
+            messages=[
+                {"role": "system", "content": user_prompt},
+                *conversation_history,
+                {"role": "user", "content": "Your turn to respond."},
+            ])
             .choices[0]
             .message["content"]
         )
@@ -52,14 +51,12 @@ def simulate_conversation(goal, system_prompt):
 
         # Agent's response
         assistant_response = (
-            openai.ChatCompletion.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": assistant_prompt},
-                    *conversation_history,
-                    {"role": "assistant", "content": "Your turn to respond."},
-                ],
-            )
+            client.chat.completions.create(model=model,
+            messages=[
+                {"role": "system", "content": assistant_prompt},
+                *conversation_history,
+                {"role": "assistant", "content": "Your turn to respond."},
+            ])
             .choices[0]
             .message["content"]
         )
