@@ -130,6 +130,6 @@ data = {
 df = pd.DataFrame(data)
 
 # Save the dataset to a file
-df.to_csv("data.csv", index=False)
+df.to_csv("/data/data.csv", index=False)
 
 print("Dataset generated and saved to 'data.csv'")
