@@ -76,6 +76,9 @@ def simulate_conversation(goal, system_prompt):
         # Store golden response
         golden_response = assistant_response
 
+        print(f"User: {user_response}")
+        print(f"Assistant: {assistant_response}")
+
     return conversation_history, golden_response
 
 
