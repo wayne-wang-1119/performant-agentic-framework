@@ -19,7 +19,7 @@ system_prompt = prompt_manager.get(node_manager.get_navigation_map())
 # Define user goals
 user_goals = [
     "Schedule an appointment.",
-    "Transfer to another department.",
+    "Prank call.",
     "Ask about pricing for services.",
     "Inquire about cancellation policies.",
     "Update contact information.",
@@ -46,9 +46,10 @@ def simulate_conversation(goal, system_prompt):
                     *conversation_history,
                     {"role": "user", "content": "Your turn to respond."},
                 ],
+                stream=False,
             )
             .choices[0]
-            .message["content"]
+            .message.content
         )
 
         conversation_history.append({"role": "user", "content": user_response})
@@ -62,9 +63,10 @@ def simulate_conversation(goal, system_prompt):
                     *conversation_history,
                     {"role": "assistant", "content": "Your turn to respond."},
                 ],
+                stream=False,
             )
             .choices[0]
-            .message["content"]
+            .message.content
         )
 
         conversation_history.append(
