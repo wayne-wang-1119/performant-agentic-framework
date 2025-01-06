@@ -34,7 +34,7 @@ def simulate_conversation(goal, system_prompt):
     # Initialize LLM with system prompt
     assistant_prompt = system_prompt
     user_prompt = f"You are a caller with the goal: {goal}. Start the conversation or based on the conversation history advance the conversation. Try to respond as human like as possible, which means you could likely change your idea, or have issues, or anything that is out of context."
-    random_turns = random.randint(3, 9)
+    random_turns = random.randint(1, 3)
     model = "gpt-4o-mini"  # Specify your model
     for _ in range(random_turns):
         # User's input
