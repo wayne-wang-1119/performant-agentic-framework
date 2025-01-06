@@ -61,7 +61,7 @@ If the user's response:
   - Instruction: "Hello! Thank you for calling Company X. What can I help you with today?"
   - Navigation:
     - If the user wants to book an appointment, go to Node 1.
-    - If the user wants to transfer, go to Node 5.
+    - If the user wants other services other than scheduling, go to Node 5.
     - If the user wants to end the call, go to Node 10.
 
 - **Node 1**:
@@ -109,4 +109,3 @@ If the user's response:
 
 ---
 """
-
