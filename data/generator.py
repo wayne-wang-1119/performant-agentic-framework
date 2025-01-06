@@ -3,8 +3,11 @@ import pandas as pd
 from prompt import NodeManager, PromptManager
 import random
 import os
+from dotenv import load_dotenv
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))  # Or any LLM API you prefer
+
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Initialize NodeManager and PromptManager
 node_manager = NodeManager()
