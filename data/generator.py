@@ -2,6 +2,7 @@ import openai  # Or any LLM API you prefer
 import pandas as pd
 from prompt import NodeManager, PromptManager
 import random
+import os
 
 # Initialize NodeManager and PromptManager
 node_manager = NodeManager()
@@ -18,6 +19,8 @@ user_goals = [
     "Inquire about cancellation policies.",
     "Update contact information.",
 ]
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 # Function to simulate conversation using LLM
