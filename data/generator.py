@@ -1,10 +1,10 @@
 from openai import OpenAI
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))  # Or any LLM API you prefer
 import pandas as pd
 from prompt import NodeManager, PromptManager
 import random
 import os
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))  # Or any LLM API you prefer
 
 # Initialize NodeManager and PromptManager
 node_manager = NodeManager()
@@ -23,7 +23,6 @@ user_goals = [
 ]
 
 
-
 # Function to simulate conversation using LLM
 def simulate_conversation(goal, system_prompt):
     conversation_history = []
@@ -37,12 +36,14 @@ def simulate_conversation(goal, system_prompt):
     for _ in range(random_turns):
         # User's input
         user_response = (
-            client.chat.completions.create(model=model,
-            messages=[
-                {"role": "system", "content": user_prompt},
-                *conversation_history,
-                {"role": "user", "content": "Your turn to respond."},
-            ])
+            client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": user_prompt},
+                    *conversation_history,
+                    {"role": "user", "content": "Your turn to respond."},
+                ],
+            )
             .choices[0]
             .message["content"]
         )
@@ -51,12 +52,14 @@ def simulate_conversation(goal, system_prompt):
 
         # Agent's response
         assistant_response = (
-            client.chat.completions.create(model=model,
-            messages=[
-                {"role": "system", "content": assistant_prompt},
-                *conversation_history,
-                {"role": "assistant", "content": "Your turn to respond."},
-            ])
+            client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": assistant_prompt},
+                    *conversation_history,
+                    {"role": "assistant", "content": "Your turn to respond."},
+                ],
+            )
             .choices[0]
             .message["content"]
         )
