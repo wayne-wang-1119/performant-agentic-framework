@@ -1,9 +1,14 @@
 import random
 import pandas as pd
-from prompt import cleaned_system_prompt
+from prompt import NodeManager
 import os
 
 # Example variations for user intents and assistant responses
+
+# Define the system prompt
+node_manager = NodeManager()
+system_prompt = node_manager.get_navigation_map()
+
 user_intents = [
     "Hi, I'm looking to schedule an appointment.",
     "Can I get a quote for fencing installation?",
@@ -91,7 +96,7 @@ for i in range(50):
 
 # Create a DataFrame
 data = {
-    "System Prompt": [cleaned_system_prompt] * 50,
+    "System Prompt": [system_prompt] * 50,
     "Conversation History": conversations,
     "Golden Response": golden_responses_col,
 }
