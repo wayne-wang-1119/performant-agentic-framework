@@ -1,13 +1,14 @@
 import random
 import pandas as pd
-from prompt import NodeManager
+from prompt import NodeManager, PromptManager
 import os
 
 # Example variations for user intents and assistant responses
 
 # Define the system prompt
 node_manager = NodeManager()
-system_prompt = node_manager.get_navigation_map()
+prompt_manager = PromptManager(node_manager)
+system_prompt = prompt_manager.get(node_manager.get_navigation_map())
 
 user_intents = [
     "Hi, I'm looking to schedule an appointment.",
