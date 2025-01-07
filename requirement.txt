@@ -3,3 +3,4 @@ openai
 python-dotenv
 evidently[llm]
 pydantic
+virtualenv
