@@ -1,7 +1,7 @@
 import os
 import pandas as pd
-from openai import OpenAI
 import json
+from openai import OpenAI
 from dotenv import load_dotenv
 from evidently.test_suite import TestSuite
 from evidently.descriptors import SemanticSimilarity
@@ -10,12 +10,12 @@ from evidently.tests import TestColumnValueMean
 # Load environment variables
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 # File paths
 INPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/dataset.csv")
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/eval_naive.csv")
 
 
-# Fix JSON formatting issues
 def fix_json_format(json_str):
     """
     Fix JSON formatting issues:
@@ -26,7 +26,6 @@ def fix_json_format(json_str):
         return json.loads(json_str)  # Attempt direct parsing
     except json.JSONDecodeError:
         try:
-            # Replace single quotes with double quotes
             fixed_str = json_str.replace("'", '"')
             return json.loads(fixed_str)
         except json.JSONDecodeError as e:
@@ -34,7 +33,6 @@ def fix_json_format(json_str):
             return None  # Return None if completely invalid
 
 
-# Call the LLM
 def call_llm(system_prompt, conversation_history, user_message):
     """
     Calls the LLM with the system prompt, conversation history, and user message.
@@ -48,7 +46,6 @@ def call_llm(system_prompt, conversation_history, user_message):
     return response.choices[0].message.content
 
 
-# Evaluate similarity using Evidently
 def evaluate_with_evidently(generated_responses, golden_responses):
     """
     Computes semantic similarity using Evidently's TestSuite.
