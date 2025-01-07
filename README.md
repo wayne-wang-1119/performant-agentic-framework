@@ -7,6 +7,9 @@ arena experiment code for PAF, including the dataset
 1. Install the required packages
 
 ```bash
+pip install virtualenv
+virtualenv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -24,8 +27,8 @@ This will generate a dataset in the `data` folder called dataset.csv with the fo
 
 3. Run the experiment
 
-We leverage Evidently AI's Regression score to the alignment of the latest generation to the golden response.
+We leverage Evidently AI's Regression score / semantic similarity to the alignment of the latest generation to the golden response.
 
 ```bash
-TODO
+python evaluation/eval_naive.py
 ```
