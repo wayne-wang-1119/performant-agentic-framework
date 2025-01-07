@@ -96,10 +96,12 @@ for idx, row in df.iterrows():
         similarity_score = compute_semantic_similarity(
             generated_response, golden_response
         )
+		print("=====================================================")
         print(f"Processed row {idx + 1}: Similarity = {similarity_score}")
         print(
             f"Generated response: {generated_response} \nGolden response: {golden_response} \n"
         )
+		print("=====================================================")
         semantic_similarities.append(similarity_score)
 
     except Exception as e:
