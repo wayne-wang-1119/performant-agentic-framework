@@ -44,7 +44,7 @@ def call_llm(system_prompt, conversation_history, user_message):
     messages.extend(conversation_history)
     messages.append({"role": "user", "content": user_message})
 
-    response = client.chat.completions.create(model="gpt-4o-mini", messages=messages  # Use your preferred model)
+    response = client.chat.completions.create(model="gpt-4o-mini", messages=messages)
     return response.choices[0].message.content
 
 
