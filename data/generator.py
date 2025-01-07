@@ -20,8 +20,8 @@ system_prompt = prompt_manager.get(node_manager.get_navigation_map())
 user_goals = [
     "Schedule an appointment.",
     "Prank call.",
-    "Ask about pricing for services.",
-    "Inquire about cancellation policies.",
+    "Ask about services other than scheduling.",
+    "Inquire about customer support that needs to be transferred.",
     "Update contact information.",
 ]
 
@@ -33,9 +33,10 @@ def simulate_conversation(goal, system_prompt):
 
     # Initialize LLM with system prompt
     assistant_prompt = system_prompt
-    user_prompt = f"You are a caller with the goal: {goal}. Start the conversation or based on the conversation history advance the conversation. Try to respond as human like as possible, which means you could likely change your idea, or have issues, or anything that is out of context."
-    random_turns = random.randint(1, 3)
+    user_prompt = f"You are a caller with the goal: {goal}. Start the conversation or based on the conversation history advance the conversation. Try to respond as human like as possible, which means you could likely change your idea, or have issues, or anything that is out of context. You should start from now on generate a response that a caller would say instead of assistant message."
+    random_turns = random.randint(2, 5)
     model = "gpt-4o-mini"  # Specify your model
+    print("=====================================================")
     for _ in range(random_turns):
         # User's input
         user_response = (
@@ -78,6 +79,7 @@ def simulate_conversation(goal, system_prompt):
 
         print(f"User: {user_response}")
         print(f"Assistant: {assistant_response}")
+    print("=====================================================")
 
     return conversation_history, golden_response
 
