@@ -29,6 +29,8 @@ This will generate a dataset in the `data` folder called dataset.csv with the fo
 
 We leverage Evidently AI's Regression score / semantic similarity to the alignment of the latest generation to the golden response.
 
+- `evaluation/eval_naive.py`: This script will evaluate the performance of the naive setup, which always sends the entire map and receives the entire response.
+
 ```bash
 python evaluation/eval_naive.py
 ```
