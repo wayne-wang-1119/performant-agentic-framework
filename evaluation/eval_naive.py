@@ -1,36 +1,22 @@
 import os
 import pandas as pd
-import json
-from openai import OpenAI
+import ast
+import re
+from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
-from evidently.test_suite import TestSuite
-from evidently.descriptors import SemanticSimilarity
-from evidently.tests import TestColumnValueMean
+from openai import OpenAI
 
 # Load environment variables
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Load pre-trained model for semantic similarity
+model = SentenceTransformer("all-MiniLM-L6-v2")  # Lightweight and efficient
+
 # File paths
 INPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/dataset.csv")
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/eval_naive.csv")
-
-
-def fix_json_format(json_str):
-    """
-    Fix JSON formatting issues:
-    - Replace single quotes with double quotes
-    - Escape any problematic characters
-    """
-    try:
-        return json.loads(json_str)  # Attempt direct parsing
-    except json.JSONDecodeError:
-        try:
-            fixed_str = json_str.replace("'", '"')
-            return json.loads(fixed_str)
-        except json.JSONDecodeError as e:
-            print(f"Failed to fix JSON: {json_str}, error: {e}")
-            return None  # Return None if completely invalid
 
 
 def call_llm(system_prompt, conversation_history, user_message):
@@ -46,32 +32,22 @@ def call_llm(system_prompt, conversation_history, user_message):
     return response.choices[0].message.content
 
 
-def evaluate_with_evidently(generated_responses, golden_responses):
-    """
-    Computes semantic similarity using Evidently's TestSuite.
-    Returns the similarity score.
-    """
-    data = pd.DataFrame(
-        {
-            "response": golden_responses,
-            "generated_response": generated_responses,
-        }
-    )
+def clean_response(response):
+    if isinstance(response, str):
+        # Remove surrounding quotes if they exist
+        response = response.strip('"')
+        response = response.strip()
+    return response
 
-    test_suite = TestSuite(
-        tests=[
-            TestColumnValueMean(
-                column_name=SemanticSimilarity(display_name="Semantic Similarity").on(
-                    ["response", "generated_response"]
-                ),
-                gte=0.0,  # Compute value without a threshold
-            )
-        ]
-    )
 
-    test_suite.run(reference_data=None, current_data=data)
-    test_results = test_suite.json()
-    return test_results["tests"][0]["parameters"]["value"]
+def compute_semantic_similarity(response_1, response_2):
+    """
+    Compute semantic similarity between two responses using cosine similarity.
+    """
+    embeddings = model.encode([response_1, response_2])
+    similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
+    similarity = max(0.0, min(similarity, 1.0))
+    return similarity
 
 
 # Load and preprocess dataset
@@ -87,9 +63,6 @@ df.rename(
     inplace=True,
 )
 
-# Fix JSON formatting in the 'convo_history' column
-df["convo_history"] = df["convo_history"].apply(fix_json_format)
-
 # Evaluation loop
 semantic_similarities = []
 for idx, row in df.iterrows():
@@ -97,10 +70,8 @@ for idx, row in df.iterrows():
         system_prompt = row["system_prompt"]
         convo_history = row["convo_history"]
         golden_response = row["golden_response"]
-
-        if not convo_history or not isinstance(convo_history, list):
-            raise ValueError(f"Invalid conversation history at row {idx}")
-
+        convo_history = ast.literal_eval(convo_history)
+        golden_response = clean_response(ast.literal_eval(golden_response))
         if convo_history[-1]["role"] == "assistant":
             convo_history = convo_history[:-1]
 
@@ -112,7 +83,6 @@ for idx, row in df.iterrows():
             ),
             None,
         )
-
         if not last_user_message:
             print(f"Row {idx}: No user message found. Skipping.")
             semantic_similarities.append(None)
@@ -120,13 +90,16 @@ for idx, row in df.iterrows():
 
         # Call LLM to generate a response
         generated_response = call_llm(system_prompt, convo_history, last_user_message)
+        generated_response = clean_response(generated_response)
 
         # Evaluate similarity
-        similarity_score = evaluate_with_evidently(
-            [generated_response], [golden_response]
+        similarity_score = compute_semantic_similarity(
+            generated_response, golden_response
         )
         print(f"Processed row {idx + 1}: Similarity = {similarity_score}")
-
+        print(
+            f"Generated response: {generated_response} \nGolden response: {golden_response} \n"
+        )
         semantic_similarities.append(similarity_score)
 
     except Exception as e:
