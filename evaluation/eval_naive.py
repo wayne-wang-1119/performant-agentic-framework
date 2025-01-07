@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-import openai
+from openai import OpenAI
 import json
 from dotenv import load_dotenv
 from evidently.test_suite import TestSuite
@@ -9,8 +9,7 @@ from evidently.tests import TestColumnValueMean
 
 # Load environment variables
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # File paths
 INPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/dataset.csv")
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/eval_naive.csv")
@@ -45,10 +44,8 @@ def call_llm(system_prompt, conversation_history, user_message):
     messages.extend(conversation_history)
     messages.append({"role": "user", "content": user_message})
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini", messages=messages  # Use your preferred model
-    )
-    return response["choices"][0]["message"]["content"]
+    response = client.chat.completions.create(model="gpt-4o-mini", messages=messages  # Use your preferred model)
+    return response.choices[0].message.content
 
 
 # Evaluate similarity using Evidently
