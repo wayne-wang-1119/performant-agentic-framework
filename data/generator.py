@@ -87,9 +87,8 @@ def simulate_conversation(goal, system_prompt):
 # Function to determine the golden response based on the navigation map and the last agent message
 def determine_golden_response(conversation_history, system_prompt):
     last_agent_message = conversation_history[-1]["content"]
-    navigation_map = node_manager.get_navigation_map()
 
-    prompt = f"Based on the following navigation map and system prompt, identify the node instruction that most closely aligns with the last agent message. If the user requests a different service, ensure the golden response corresponds to the transfer node.\n\nNavigation Map:\n{navigation_map}\n\nSystem Prompt:\n{system_prompt}\n\nLast Agent Message:\n{last_agent_message}\n\nGolden Response:"  # Explicit prompt for LLM
+    prompt = f"Based on the following navigation map and system prompt, identify the node instruction that most closely aligns with the last agent message. If the user requests a different service, ensure the golden response corresponds to the transfer node. Always and only return the original instruction of the node that is being said by the Agent, if it does not exist then return empty string. Do not return anything else. System Prompt:\n{system_prompt}\n\nLast Agent Message:\n{last_agent_message}\n\nGolden Response:"  # Explicit prompt for LLM
 
     model = "gpt-4o"  # Specify your model
     golden_response = (
