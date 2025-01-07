@@ -5,10 +5,9 @@ import pandas as pd
 import openai
 import json
 from dotenv import load_dotenv
-from evidently.report import Report
-from evidently.metric_preset import TextEvals
-from evidently import ColumnMapping
-from evidently.descriptors import SemanticSimilarity
+from evidently.test_suite import TestSuite
+from evidently.descriptors import *
+from evidently.tests import *
 
 # Load environment variables
 load_dotenv()
@@ -34,36 +33,39 @@ def call_llm(system_prompt, conversation_history, user_message):
     return response["choices"][0]["message"]["content"]
 
 
-def evaluate_similarity(generated_response, golden_response):
+def evaluate_with_evidently(generated_responses, golden_responses):
     """
-    Computes the semantic similarity between the generated response and the golden response.
-    Returns the similarity score.
+    Computes semantic similarity and regression metrics using Evidently's TestSuite.
+    Returns a dictionary with evaluation results.
     """
+    # Prepare the data
     data = pd.DataFrame(
-        {"generated": [generated_response], "golden": [golden_response]}
+        {
+            "response": golden_responses,
+            "generated_response": generated_responses,
+        }
     )
 
-    column_mapping = ColumnMapping(text_features=["generated", "golden"])
-
-    report = Report(
-        metrics=[
-            TextEvals(
-                column_name="generated",
-                descriptors=[
-                    SemanticSimilarity(
-                        with_column="golden", display_name="Semantic Similarity"
-                    )
-                ],
+    # Create a TestSuite for semantic similarity
+    test_suite = TestSuite(
+        tests=[
+            TestColumnValueMean(
+                column_name=SemanticSimilarity(display_name="Semantic Similarity").on(
+                    ["response", "generated_response"]
+                ),
+                gte=0.0,  # No threshold; just compute the value
             )
         ]
     )
-    report.run(current_data=data, column_mapping=column_mapping)
-    evaluated_data = report.datasets().current
 
-    # Debugging: Print data structure
-    print(evaluated_data.head())
+    # Run the test suite
+    test_suite.run(reference_data=None, current_data=data)
 
-    return evaluated_data["Semantic Similarity"].iloc[0]
+    # Extract results as JSON and parse them
+    test_results = test_suite.json()
+    similarity_score = test_results["tests"][0]["parameters"]["value"]
+
+    return similarity_score
 
 
 # Load dataset
@@ -72,6 +74,7 @@ semantic_similarities = []
 
 for idx, row in df.iterrows():
     try:
+        # Extract system prompt, conversation history, and golden response
         system_prompt = row["system_prompt"]
         convo_history = json.loads(row["convo_history"])
         golden_response = row["golden_response"]
@@ -93,10 +96,15 @@ for idx, row in df.iterrows():
             semantic_similarities.append(None)
             continue
 
+        # Call the LLM to get the generated response
         generated_response = call_llm(system_prompt, convo_history, last_user_message)
-        similarity_score = evaluate_similarity(generated_response, golden_response)
 
+        # Evaluate similarity using Evidently
+        similarity_score = evaluate_with_evidently(
+            [generated_response], [golden_response]
+        )
         print(f"Processed row {idx + 1}: Similarity = {similarity_score}")
+
         semantic_similarities.append(similarity_score)
 
     except Exception as e:

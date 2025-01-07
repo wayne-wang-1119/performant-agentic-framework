@@ -1,4 +1,5 @@
 pandas
 openai
 python-dotenv
-evidently
+evidently[llm]
+pydantic
