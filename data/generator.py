@@ -33,9 +33,9 @@ def simulate_conversation(goal, system_prompt):
 
     # Initialize LLM with system prompt
     assistant_prompt = system_prompt
-    user_prompt = f"You are a caller with the goal: {goal}. Start the conversation or based on the conversation history advance the conversation. Try to respond as human like as possible, which means you could likely change your idea, or have issues, or anything that is out of context. You should start from now on generate a response that a caller would say instead of assistant message."
+    user_prompt = f"You are a caller with the goal: {goal}. Start the conversation or based on the conversation history advance the conversation. Try to respond as human like as possible, which means you could likely change your idea, or have issues, or anything that is out of context. You should start from now on generate a response that a caller would say instead of assistant message. If you are sending the first message to the agent then start with simple greeting that aligns to the goal implicitly."
     random_turns = random.randint(2, 5)
-    model = "gpt-4o-mini"  # Specify your model
+    model = "gpt-4o"  # Specify your model
     print("=====================================================")
     for _ in range(random_turns):
         # User's input
@@ -84,15 +84,37 @@ def simulate_conversation(goal, system_prompt):
     return conversation_history, golden_response
 
 
+# Function to determine the golden response based on the navigation map and the last agent message
+def determine_golden_response(conversation_history, system_prompt):
+    last_agent_message = conversation_history[-1]["content"]
+    navigation_map = node_manager.get_navigation_map()
+
+    prompt = f"Based on the following navigation map and system prompt, identify the node instruction that most closely aligns with the last agent message. If the user requests a different service, ensure the golden response corresponds to the transfer node.\n\nNavigation Map:\n{navigation_map}\n\nSystem Prompt:\n{system_prompt}\n\nLast Agent Message:\n{last_agent_message}\n\nGolden Response:"  # Explicit prompt for LLM
+
+    model = "gpt-4o"  # Specify your model
+    golden_response = (
+        client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": prompt},
+            ],
+            stream=False,
+        )
+        .choices[0]
+        .message.content
+    )
+
+    return golden_response
+
+
 # Generate dataset
 conversations = []
 golden_responses = []
 
 for goal in user_goals:
-    for _ in range(
-        10
-    ):  # Simulate 10 conversations per goal, totalling a 50 conversations
-        convo_history, golden_response = simulate_conversation(goal, system_prompt)
+    for _ in range(10):  # Simulate 10 conversations per goal, totaling 50 conversations
+        convo_history, _ = simulate_conversation(goal, system_prompt)
+        golden_response = determine_golden_response(convo_history, system_prompt)
         conversations.append(convo_history)
         golden_responses.append(golden_response)
 
@@ -105,7 +127,10 @@ data = {
 df = pd.DataFrame(data)
 
 # Save the dataset to a file
-output_path = "./data/simulated_data.csv"
+output_path = "./data/dataset.csv"
 df.to_csv(output_path, index=False)
 
 print(f"Dataset generated and saved to '{output_path}'")
+
+
+# Manually go through the golden response and update each to the correct Node responses.
