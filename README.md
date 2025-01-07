@@ -25,6 +25,8 @@ dataset.csv contains the following columns:
 
 3. Run the experiment
 
+We leverage Evidently AI's Regression score to the alignment of the latest generation to the golden response.
+
 ```bash
 TODO
 ```
