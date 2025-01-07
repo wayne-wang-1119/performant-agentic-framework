@@ -12,7 +12,7 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Load pre-trained model for semantic similarity
-model = SentenceTransformer("all-MiniLM-L6-v2")  # Lightweight and efficient
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # File paths
 INPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/dataset.csv")
@@ -34,7 +34,6 @@ def call_llm(system_prompt, conversation_history, user_message):
 
 def clean_response(response):
     if isinstance(response, str):
-        # Remove surrounding quotes if they exist
         response = response.strip('"')
         response = response.strip()
     return response
@@ -96,12 +95,12 @@ for idx, row in df.iterrows():
         similarity_score = compute_semantic_similarity(
             generated_response, golden_response
         )
-		print("=====================================================")
+        print("=====================================================")
         print(f"Processed row {idx + 1}: Similarity = {similarity_score}")
         print(
             f"Generated response: {generated_response} \nGolden response: {golden_response} \n"
         )
-		print("=====================================================")
+        print("=====================================================")
         semantic_similarities.append(similarity_score)
 
     except Exception as e:
@@ -109,7 +108,7 @@ for idx, row in df.iterrows():
         semantic_similarities.append(None)
 
 # Add results to DataFrame
-df["semantic_similarity"] = semantic_similarities
+df["naive_semantic_similarity"] = semantic_similarities
 
 # Save updated DataFrame
 df.to_csv(OUTPUT_FILE, index=False)
