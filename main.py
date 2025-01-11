@@ -66,7 +66,7 @@ def main():
     ]
     summary_df = pd.DataFrame(
         summary_data,
-        columns=["method", "count_above_0.8", "mean", "median"],
+        columns=["method", "total_complete_hit", "count_above_0.8", "mean", "median"],
     )
 
     # 7) Save the summary to cross_eval.csv
