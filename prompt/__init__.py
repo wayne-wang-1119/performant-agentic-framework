@@ -1,5 +1,11 @@
+from sentence_transformers import SentenceTransformer
+
+
 class NodeManager:
     def __init__(self):
+        self.model = SentenceTransformer(
+            "all-MiniLM-L6-v2"
+        )  # Using OpenAI's latest vector model v3 small is also performant and optimizes the latency
         # Define the full map of nodes
         self.full_map = {
             0: {
@@ -65,6 +71,11 @@ class NodeManager:
                 "navigation": "terminate",
             },
         }
+        
+        self.node_embeddings = {}
+          for node_id, node_data in self.full_map.items():
+              text = node_data["instruction"]
+              self.node_embeddings[node_id] = self.model.encode(text)
 
     def get_navigation_map(self, nodes=None):
         """
