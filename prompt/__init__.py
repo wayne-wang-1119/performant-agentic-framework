@@ -60,13 +60,15 @@ class NodeManager:
                 "instruction": "Perfect! I have booked your appointment for [date and time]. Is there anything else I can assist you with?",
                 "navigation": {
                     "no_further_questions": 9,
-                    "still_need_help": 11,
-                    "off rails": 12,
                 },
             },
             9: {
                 "instruction": "Thank you for calling Company X. Have a great day!",
-                "navigation": "terminate",
+                "navigation": {
+                    "end_call": 10,
+                    "still_need_help": 11,
+                    "off rails": 12,
+                },
             },
             10: {
                 "instruction": "Goodbye! Have a great day!",
