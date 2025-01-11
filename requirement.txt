@@ -4,3 +4,4 @@ python-dotenv
 pydantic
 virtualenv
 black
+matplotlib
