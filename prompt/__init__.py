@@ -70,6 +70,20 @@ class NodeManager:
                 "instruction": "Goodbye! Have a great day!",
                 "navigation": "terminate",
             },
+            11: {
+                "instruction": "I can schedule that for you what day are you looking for us to come out?",
+                "navigation": {
+                    "provide_day": 7,
+                },
+            },
+            12: {
+                "instruction": "I would love to help answer that question, but I am only able to schedule appointments. Would you like to schedule an appointment?",
+                "navigation": {
+                    "book_appointment": 1,
+                    "other_services": 5,
+                    "end_call": 10,
+                },
+            },
         }
 
         self.node_embeddings = {}
