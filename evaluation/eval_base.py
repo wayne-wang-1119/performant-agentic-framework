@@ -6,7 +6,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 from openai import OpenAI
-from prompt import NodeManager, PromptManager
+from prompt_manager import NodeManager
+from prompt_manager import PromptManager
 
 # Load environment variables
 load_dotenv()

@@ -1,6 +1,7 @@
 from openai import OpenAI
 import pandas as pd
-from prompt import NodeManager, PromptManager
+from prompt_manager import NodeManager
+from prompt_manager import PromptManager
 import random
 import os
 from dotenv import load_dotenv
