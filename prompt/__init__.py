@@ -82,6 +82,66 @@ class NodeManager:
         # Return the filtered map
         return {node: self.full_map[node] for node in nodes}
 
+    def get_submap_upto_node(self, target_node):
+        """
+        Build a 'path' from node 0 to the 'target_node' (if possible), then collect:
+          - all nodes on that path
+          - the children of each node on that path (if they exist)
+        Returns a sub-map (dict) that you can pass to the LLM.
+        """
+        # 1. Find path from 0 to target_node (DFS or BFS). We'll do a simple DFS here.
+        visited = set()
+        path = []
+
+        def dfs(current, goal, current_path):
+            if current in visited:
+                return False
+            visited.add(current)
+            current_path.append(current)
+
+            if current == goal:
+                return True
+
+            node_data = self.full_map.get(current, {})
+            nav = node_data.get("navigation", {})
+
+            # If navigation is a dict, explore children
+            if isinstance(nav, dict):
+                for child_node in nav.values():
+                    if isinstance(child_node, int):
+                        if dfs(child_node, goal, current_path):
+                            return True
+
+            current_path.pop()
+            return False
+
+        found = dfs(0, target_node, path)
+        if not found:
+            # If there's no path, just return a single-node map if it exists
+            return (
+                {target_node: self.full_map[target_node]}
+                if target_node in self.full_map
+                else {}
+            )
+
+        # 2. Build submap from the nodes in 'path' + the children of those nodes
+        submap_nodes = set(path)
+
+        # For each node in the path, add its children
+        for node_id in path:
+            navigation = self.full_map[node_id].get("navigation", {})
+            if isinstance(navigation, dict):
+                for child in navigation.values():
+                    if isinstance(child, int):
+                        submap_nodes.add(child)
+
+        # 3. Construct dictionary
+        filtered_map = {}
+        for node_id in submap_nodes:
+            filtered_map[node_id] = self.full_map[node_id]
+
+        return filtered_map
+
 
 class PromptManager:
     def __init__(self, node_manager):
