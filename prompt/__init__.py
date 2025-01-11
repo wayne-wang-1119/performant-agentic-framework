@@ -71,11 +71,11 @@ class NodeManager:
                 "navigation": "terminate",
             },
         }
-        
+
         self.node_embeddings = {}
-          for node_id, node_data in self.full_map.items():
-              text = node_data["instruction"]
-              self.node_embeddings[node_id] = self.model.encode(text)
+        for node_id, node_data in self.full_map.items():
+            text = node_data["instruction"]
+            self.node_embeddings[node_id] = self.model.encode(text)
 
     def get_navigation_map(self, nodes=None):
         """
