@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import pandas as pd
 import ast
 import re
@@ -86,6 +87,29 @@ def call_llm_to_find_step(assistant_message, conversation_history, navigation_ma
     return step_str
 
 
+def find_step_with_vectors(assistant_message: str) -> (int, float):
+    """
+    Vectorize assistant_message and compare it to each node's embedding
+    using the *dot product* rather than cosine similarity.
+
+    Returns (best_node_id, best_score).
+    """
+    embedding = node_manager.model.encode(assistant_message)
+    best_node_id = None
+    best_score = float("-inf")
+
+    for node_id, node_emb in node_manager.node_embeddings.items():
+        dot_val = np.dot(embedding, node_emb)  # Dot product
+        if dot_val > best_score:
+            best_score = dot_val
+            best_node_id = node_id
+
+    # If best_score > 0.5, we consider that "good enough"; otherwise we return None
+    if best_score > 0.5:
+        return best_node_id, best_score
+    return None, 0.0
+
+
 # File paths
 INPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/dataset.csv")
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/eval_paf.csv")
@@ -119,11 +143,11 @@ for idx, row in df.iterrows():
             semantic_similarities.append(None)
             continue
 
-        # 1) Omit last assistant message
+        # 1) Omit last assistant message if it exists
         if convo_history[-1]["role"] == "assistant":
             convo_history.pop()
 
-        # 2) Omit last user message
+        # 2) Omit last user message if it exists
         last_user_message = None
         if convo_history and convo_history[-1]["role"] == "user":
             last_user_message = convo_history[-1]["content"]
@@ -134,23 +158,21 @@ for idx, row in df.iterrows():
             semantic_similarities.append(None)
             continue
 
-        # 3) Call LLM to find which step we might be on
-        #    (we use the now 'last' assistant message from convo_history if it exists,
-        #     but be careful if there's no assistant message left.)
-        assistant_msg_for_step = ""
-        for msg in reversed(convo_history):
-            if msg["role"] == "assistant":
-                assistant_msg_for_step = msg["content"]
-                break
+        # 3) Parallel: Call vector method & LLM method to find the step
+        assistant_msg_for_step = convo_history[-1]["content"]
+        vector_step_id, vector_step_score = find_step_with_vectors(
+            assistant_msg_for_step
+        )
 
-        if not assistant_msg_for_step:
-            print(f"Row {idx}: No assistant message to identify step from. Skipping.")
-            semantic_similarities.append(None)
-            continue
-
-        step_str = call_llm_to_find_step(
+        llm_step_str = call_llm_to_find_step(
             assistant_msg_for_step, convo_history, navigation_map
         )
+
+        # If vector_step_id is not None, it passed the threshold; otherwise use llm_step_str
+        if vector_step_id is not None:
+            step_str = str(vector_step_id)
+        else:
+            step_str = llm_step_str
 
         # 4) Convert step_str to integer if possible
         try:
