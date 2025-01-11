@@ -8,8 +8,8 @@ import seaborn as sns
 def main():
     # 1) Run each evaluation script sequentially
     subprocess.run(["python", "evaluation/eval_naive.py"], check=True)
-    subprocess.run(["python", "evaluation/eval_base.py"], check=True)
-    subprocess.run(["python", "evaluation/eval_paf.py"], check=True)
+    subprocess.run(["python -m", "evaluation/eval_base.py"], check=True)
+    subprocess.run(["python -m", "evaluation/eval_paf.py"], check=True)
 
     # 2) Define file paths for CSVs
     data_dir = "data"
