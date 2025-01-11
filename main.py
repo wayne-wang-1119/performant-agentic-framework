@@ -61,7 +61,7 @@ def main():
     # 6) Build a summary DataFrame
     summary_data = [
         ["naive", naive_count_above, naive_total_hit, naive_avg, naive_median],
-        ["base", base_count_above, bast_total_hit, base_avg, base_median],
+        ["base", base_count_above, base_total_hit, base_avg, base_median],
         ["optimized", paf_count_above, paf_total_hit, paf_avg, paf_median],
     ]
     summary_df = pd.DataFrame(
