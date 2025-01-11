@@ -60,6 +60,8 @@ class NodeManager:
                 "instruction": "Perfect! I have booked your appointment for [date and time]. Is there anything else I can assist you with?",
                 "navigation": {
                     "no_further_questions": 9,
+                    "still_need_help": 11,
+                    "off rails": 12,
                 },
             },
             9: {
