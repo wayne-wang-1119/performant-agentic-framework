@@ -269,7 +269,7 @@ for idx, row in df.iterrows():
                     f"Below is a partial navigation map relevant to your current step:\n{current_navi_map}\n\n"
                     "Now continue from that context."
                 )
-                messagess.append(convo_history[i + 1])
+                messages.append(convo_history[i + 1])
 
             elif turn["role"] == "user":
                 # 1) Append user message
