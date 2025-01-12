@@ -169,7 +169,9 @@ On step 9, you should say: "Ok goodbye for now."
 
 ### Task:
 Based on the navigation map, return the step that is most similar to what the AI assistant responded with in the last AI Message.
-If the conversation is not advancing to any appropriate step, return -1. """,
+If the conversation is not advancing to any appropriate step, return -1. 
+You should try to advance the conversation based on the latest assistant message.
+""",
         },
         {
             "role": "system",
@@ -181,6 +183,9 @@ If the conversation is not advancing to any appropriate step, return -1. """,
         },
     ]
     messages.extend(conversation_history)
+    print("last assistant message:", assistant_message)
+    print("conversation history:", conversation_history)
+    print("navigation map:", navigation_map)
 
     response = client.chat.completions.create(model="gpt-4o-mini", messages=messages)
     step_str = response.choices[0].message.content
@@ -272,14 +277,15 @@ for idx, row in df.iterrows():
 
         messages = [
             convo_history[0],
-        ]  # Add the first assistant message
+            convo_history[1],
+        ]  # Add the first user message
         generated_response = None
 
         # We'll keep a "current_system_prompt" that can get updated with submap info
         current_system_prompt = system_prompt
         current_navi_map = format_flow_steps(node_manager.get_navigation_map())
 
-        i = 0
+        i = 1
         while i < len(convo_history):
             turn = messages[i]
 
@@ -293,7 +299,7 @@ for idx, row in df.iterrows():
                     assistant_msg
                 )
                 llm_step_str = call_llm_to_find_step(
-                    assistant_msg, messages, current_system_prompt
+                    assistant_msg, messages, current_navi_map
                 )
 
                 # 2) Decide which step to use (vector vs LLM)
@@ -343,7 +349,7 @@ for idx, row in df.iterrows():
                     assistant_reply
                 )
                 llm_step_str = call_llm_to_find_step(
-                    assistant_reply, messages, current_system_prompt
+                    assistant_reply, messages, current_navi_map
                 )
 
                 if vector_step_id is not None:
@@ -370,6 +376,10 @@ for idx, row in df.iterrows():
                     f"Below is a partial navigation map relevant to your current step:\n{current_navi_map}\n\n"
                     "Now continue from that context."
                 )
+
+                print("=====================================================")
+                print("Map we are using:", current_navi_map)
+                print("System prompt we are using:", current_system_prompt)
 
             i += 1
 

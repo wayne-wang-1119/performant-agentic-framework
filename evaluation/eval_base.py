@@ -164,11 +164,12 @@ for idx, row in df.iterrows():
         # and call the step-finder logic *immediately after* each new assistant response.
         messages = [
             convo_history[0],
-        ]  # Add the first assistant message
+            convo_history[1],
+        ]  # Add the first user message
         generated_response = None
 
         current_system_prompt = system_prompt
-        i = 0
+        i = 1
         while i < len(convo_history):
             turn = messages[i]
 

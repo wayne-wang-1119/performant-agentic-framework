@@ -176,20 +176,7 @@ Because step 2 has already been completed, you do not need to do step 2 again af
 ### NAVIGATION MAP:
 """
 
-    def format_node(self, node_id, node_data):
-        """Format a single node for inclusion in the prompt."""
-        formatted = f"- **Node {node_id}**:\n"
-        formatted += f"  - Instruction: \"{node_data['instruction']}\"\n"
-        if "Navigation" in node_data:
-            formatted += "  - Navigation:\n"
-            for condition, destination in node_data["navigation"].items():
-                formatted += f"    - {condition}: go to Node {destination}\n"
-        return formatted
-
-    def get(self, nodes=None):
+    def get(self):
         """Generate the full system prompt based on the specified nodes."""
-        navigation_map = self.node_manager.get_navigation_map(nodes)
         prompt = [self.base_prompt]
-        for node_id, node_data in navigation_map.items():
-            prompt.append(self.format_node(node_id, node_data))
         return "\n".join(prompt)
