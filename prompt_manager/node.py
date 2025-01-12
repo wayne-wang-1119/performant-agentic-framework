@@ -11,55 +11,55 @@ class NodeManager:
             0: {
                 "instruction": "Hello! Thank you for calling Company X. What can I help you with today?",
                 "navigation": {
-                    "book_appointment": 1,
-                    "other_services": 5,
-                    "end_call": 10,
+                    "caller wants to book an appointment": 1,
+                    "caller asks about other_services": 5,
+                    "caller wants to end the call": 10,
                 },
             },
             1: {
                 "instruction": "Before we get started, could you please confirm both your first and last name?",
                 "navigation": {
-                    "confirm_name": 2,
+                    "caller confirm_name": 2,
                 },
             },
             2: {
                 "instruction": "Thanks for that. Can you give me your phone number, please?",
                 "navigation": {
-                    "provide_number": 3,
+                    "caller provids number": 3,
                 },
             },
             3: {
                 "instruction": "I have your phone number as [number]. Is that the best number to reach you?",
                 "navigation": {
-                    "confirm_number": 4,
+                    "caller confirm_number": 4,
                 },
             },
             4: {
                 "instruction": "Now, could I please have your full address? Please include the street, city, state, and zip code.",
                 "navigation": {
-                    "provide_address": 6,
+                    "caller provides address": 6,
                 },
             },
             5: {
                 "instruction": "Okay, let me transfer you. One moment, please.",
-                "navigation": "terminate",
+                "navigation": "terminate the call by transfer to another agent",
             },
             6: {
                 "instruction": "Thank you. I have noted your address. What day are you looking for us to come out?",
                 "navigation": {
-                    "provide_day": 7,
+                    "caller provides day to schedule": 7,
                 },
             },
             7: {
                 "instruction": "Got it. One moment while I pull available times for that day.",
                 "navigation": {
-                    "select_time": 8,
+                    "caller selects a time to schedule": 8,
                 },
             },
             8: {
                 "instruction": "Perfect! I have booked your appointment for [date and time]. Is there anything else I can assist you with?",
                 "navigation": {
-                    "no_further_questions": 9,
+                    "caller has no more quesitons": 9,
                 },
             },
             9: {
@@ -73,33 +73,33 @@ class NodeManager:
             11: {
                 "instruction": "I can schedule that for you. What day are you looking for us to come out?",
                 "navigation": {
-                    "provide_day": 7,
-                    "node_13": 13,
+                    "callers provides day": 7,
+                    "caller has general questions": 13,
                 },
             },
             12: {
                 "instruction": "I would love to help answer that question, but I can only schedule appointments. Would you like to schedule an appointment?",
                 "navigation": {
-                    "book_appointment": 1,
-                    "other_services": 5,
-                    "end_call": 10,
-                    "node_15": 15,
+                    "caller wants to book appointment": 1,
+                    "caller has reserves about other services": 5,
+                    "caller wants to end the call or is frustrated and off topic": 10,
+                    "caller has some specific inquiries": 15,
                 },
             },
             13: {
                 "instruction": "We can re-schedule your appointment to next month or next year. Which do you prefer?",
                 "navigation": {
-                    "next_month": 7,  # Loops back to providing a day/time
-                    "next_year": 14,
-                    "back_to_main": 0,
+                    "caller wants next month": 7,  # Loops back to providing a day/time
+                    "caller wants next year": 12,
+                    "caller wants to go back to scheduling": 0,
                 },
             },
             14: {
                 "instruction": "Confirming next-year scheduling. You might lose your current slot. Continue?",
                 "navigation": {
-                    "confirm_loss": 8,  # Goes to booking final
-                    "abort": 9,  # Standard exit
-                    "further_confusion": 15,
+                    "caller wants to schedule next year": 8,  # Goes to booking final
+                    "caller wants to schedule the appointment again": 9,  # Standard exit
+                    "caller has questions about scheduling": 15,
                 },
             },
             15: {
