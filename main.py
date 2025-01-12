@@ -48,8 +48,8 @@ def main():
     #    - mean
     #    - median
     def summarize(col):
-        count_above_08 = (col > 0.7).sum()
-        total_hits = (col >= 0.97).count()
+        count_above_08 = (col > 0.8).sum()
+        total_hits = (col >= 0.97).sum()
         avg = col.mean()
         median = col.median()
         return count_above_08, total_hits, avg, median
