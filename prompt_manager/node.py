@@ -246,6 +246,18 @@ class NodeManager:
                     "does_not_want_schedule": 0,
                 },
             },
+            35: {
+                "instruction": "Interesting to hear! Can you tell me more about what you're looking for?",
+                "navigation": {
+                    "provide_info": 36,
+                },
+            },
+            36: {
+                "instruction": "I see. Let me check if we have that available. One moment, please.",
+                "navigation": {
+                    "check_availability": 0,
+                },
+            },
         }
 
         self.node_embeddings = {}
