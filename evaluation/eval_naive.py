@@ -8,6 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 from openai import OpenAI
+from typing import List
 
 # Load environment variables
 load_dotenv()
