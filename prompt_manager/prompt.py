@@ -39,6 +39,8 @@ Decide where to go based on the conversation and the navigation map that will be
 
 Try to align with the navigation map as much as possible.
 
+Do not be conversational. Respond closely to what you should based on the navigation map.
+
 ---
 
 ### NAVIGATION MAP:
