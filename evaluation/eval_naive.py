@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+import json
+import requests
 import ast
 import re
 from sklearn.metrics.pairwise import cosine_similarity
@@ -39,12 +41,52 @@ def clean_response(response):
     return response
 
 
+def vectorize_prompt(model: str, prompt_text: str) -> List[float]:
+    """
+    Call OpenAI's Embeddings API with the given `model` and `prompt_text`.
+    Returns a list of floats corresponding to the embedding.
+    """
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+    request_body = {"input": prompt_text, "model": model}
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {openai_api_key}",
+    }
+
+    url = "https://api.openai.com/v1/embeddings"
+    response = requests.post(url, json=request_body, headers=headers)
+
+    if response.status_code != 200:
+        raise ValueError(
+            f"OpenAI API returned status {response.status_code}: {response.text}"
+        )
+
+    data = response.json()
+
+    if "data" not in data or len(data["data"]) == 0:
+        raise ValueError("No data in OpenAI API response")
+
+    # The embedding is typically in the first entry of data["data"]
+    embedding = data["data"][0]["embedding"]
+    return embedding
+
+
 def compute_semantic_similarity(response_1, response_2):
     """
-    Compute semantic similarity between two responses using cosine similarity.
+    Compute semantic similarity between two responses using cosine similarity
+    via OpenAI embeddings.
     """
-    embeddings = model.encode([response_1, response_2])
-    similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
+    # Get the embeddings from OpenAI
+    embedding_1 = vectorize_prompt("text-embedding-3-small", response_1)
+    embedding_2 = vectorize_prompt("text-embedding-3-small", response_2)
+
+    # Use sklearn's cosine_similarity
+    similarity = cosine_similarity([embedding_1], [embedding_2])[0][0]
+    # Clamp the similarity to [0.0, 1.0]
     similarity = max(0.0, min(similarity, 1.0))
     return similarity
 

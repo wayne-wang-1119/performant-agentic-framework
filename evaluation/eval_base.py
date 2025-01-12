@@ -1,10 +1,13 @@
 import os
-import pandas as pd
+import json
+import requests
 import ast
 import re
-from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
+import pandas as pd
 from dotenv import load_dotenv
+from sklearn.metrics.pairwise import cosine_similarity
+from typing import List
+
 from openai import OpenAI
 from prompt_manager import NodeManager
 from prompt_manager import PromptManager
@@ -13,9 +16,41 @@ from prompt_manager import PromptManager
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Load pre-trained model for semantic similarity
-model = SentenceTransformer("all-MiniLM-L6-v2")
+def vectorize_prompt(model: str, prompt_text: str) -> List[float]:
+    """
+    Call OpenAI's Embeddings API with the given `model` and `prompt_text`.
+    Returns a list of floats corresponding to the embedding.
+    """
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
 
+    request_body = {"input": prompt_text, "model": model}
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {openai_api_key}",
+    }
+
+    url = "https://api.openai.com/v1/embeddings"
+    response = requests.post(url, json=request_body, headers=headers)
+
+    if response.status_code != 200:
+        raise ValueError(
+            f"OpenAI API returned status {response.status_code}: {response.text}"
+        )
+
+    data = response.json()
+
+    if "data" not in data or len(data["data"]) == 0:
+        raise ValueError("No data in OpenAI API response")
+
+    # The embedding is typically in the first entry of data["data"]
+    embedding = data["data"][0]["embedding"]
+    return embedding
+
+
+# 2) Initialize NodeManager (same as before)
 node_manager = NodeManager()
 navigation_map = node_manager.get_navigation_map()
 
@@ -34,7 +69,6 @@ def call_llm(system_prompt, conversation_history, user_message):
     messages.append({"role": "user", "content": user_message})
 
     # Example call to a non-standard model "gpt-4o-mini"
-    # Adjust to whichever model or endpoint you're actually using
     response = client.chat.completions.create(model="gpt-4o-mini", messages=messages)
     return response.choices[0].message.content
 
@@ -51,10 +85,15 @@ def clean_response(response):
 
 def compute_semantic_similarity(response_1, response_2):
     """
-    Compute semantic similarity between two responses using cosine similarity.
+    Compute semantic similarity between two responses using cosine similarity
+    via OpenAI embeddings.
     """
-    embeddings = model.encode([response_1, response_2])
-    similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
+    # Get the embeddings from OpenAI
+    embedding_1 = vectorize_prompt("text-embedding-3-small", response_1)
+    embedding_2 = vectorize_prompt("text-embedding-3-small", response_2)
+
+    # Use sklearn's cosine_similarity
+    similarity = cosine_similarity([embedding_1], [embedding_2])[0][0]
     # Clamp the similarity to [0.0, 1.0]
     similarity = max(0.0, min(similarity, 1.0))
     return similarity
@@ -62,12 +101,17 @@ def compute_semantic_similarity(response_1, response_2):
 
 def call_llm_to_find_step(assistant_message, conversation_history, navigation_map):
     """
-    Call the LLM to find the step or the Node id that the agent is on currently based on the latest assistant message and conversation history.
+    Call the LLM to find the step or the Node id that the agent is on currently
+    based on the latest assistant message and conversation history.
     """
     messages = [
         {
             "role": "system",
-            "content": "You are identifying which Node ID or step number most closely aligns with the latest assistant message. Return only the digit that represents where the Step or Node ID you think matches the condition described.",
+            "content": (
+                "You are identifying which Node ID or step number most closely aligns "
+                "with the latest assistant message. Return only the digit that "
+                "represents where the Step or Node ID you think matches the condition described."
+            ),
         },
         {
             "role": "system",
@@ -80,7 +124,6 @@ def call_llm_to_find_step(assistant_message, conversation_history, navigation_ma
     ]
     messages.extend(conversation_history)
     response = client.chat.completions.create(model="gpt-4o-mini", messages=messages)
-    # Extract the step number from the generated response
     print("LLM response to find step:", response.choices[0].message.content)
     return response.choices[0].message.content
 
@@ -115,18 +158,13 @@ for idx, row in df.iterrows():
             semantic_similarities.append(None)
             continue
 
-        # We'll build the conversation *turn by turn*, calling the LLM whenever
-        # we see a user message. We will also call the step-finder logic
-        # *immediately after* each new assistant response.
-
-        # 1) We start a local `messages` list that will accumulate everything
+        # We'll build the conversation turn by turn,
+        # calling the LLM whenever we see a user message,
+        # and call the step-finder logic *immediately after* each new assistant response.
         messages = [convo_history[0]]  # Add the first assistant message
         generated_response = None
 
-        # 2) Prepare an initial system prompt that can be updated each turn
-        #    if we want to insert step info along the way.
         current_system_prompt = system_prompt
-
         i = 0
         while i < len(convo_history):
             turn = messages[i]
@@ -150,7 +188,6 @@ for idx, row in df.iterrows():
                 # 2) Call LLM to get new assistant response
                 assistant_reply = call_llm(current_system_prompt, messages, user_msg)
                 assistant_reply = clean_response(assistant_reply)
-
                 generated_response = assistant_reply
 
                 # 3) Append that assistant reply to our messages
@@ -165,8 +202,7 @@ for idx, row in df.iterrows():
         print("=====================================================")
         print(f"Processed row {idx + 1}: Similarity = {similarity_score}")
         print(
-            f"Generated response: {generated_response}\n"
-            f"Golden response: {golden_response}\n"
+            f"Generated response: {generated_response}\nGolden response: {golden_response}\n"
         )
         print("=====================================================")
 

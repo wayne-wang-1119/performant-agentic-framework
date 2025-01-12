@@ -1,13 +1,51 @@
-from sentence_transformers import SentenceTransformer
+import os
+import json
+import requests
+from typing import List, Dict, Any
+
+
+def vectorize_prompt(model: str, prompt_text: str) -> List[float]:
+    """
+    Call OpenAI's Embeddings API with the given `model` and `prompt_text`.
+    Returns a list of floats corresponding to the embedding.
+    """
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+    request_body = {"input": prompt_text, "model": model}
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {openai_api_key}",
+    }
+
+    url = "https://api.openai.com/v1/embeddings"
+    response = requests.post(url, json=request_body, headers=headers)
+
+    if response.status_code != 200:
+        raise ValueError(
+            f"OpenAI API returned status {response.status_code}: {response.text}"
+        )
+
+    data = response.json()
+
+    if "data" not in data or len(data["data"]) == 0:
+        raise ValueError("No data in OpenAI API response")
+
+    # The embedding is typically in the first entry of data["data"]
+    embedding = data["data"][0]["embedding"]
+    return embedding
 
 
 class NodeManager:
     def __init__(self):
-        self.model = SentenceTransformer(
-            "all-MiniLM-L6-v2"
-        )  # Using OpenAI's latest vector model v3 small is also performant and optimizes the latency
-        # Define the full map of nodes
-        self.full_map = {
+        """
+        Initialize the NodeManager and load all of your flow-map nodes.
+        Instead of using SentenceTransformer, we call `vectorize_prompt`
+        for each instruction to get its embedding from OpenAI.
+        """
+        self.full_map: Dict[int, Dict[str, Any]] = {
             0: {
                 "instruction": "Hello! Thank you for calling Company X. What can I help you with today?",
                 "navigation": {
@@ -89,7 +127,7 @@ class NodeManager:
             13: {
                 "instruction": "We can re-schedule your appointment to next month or next year. Which do you prefer?",
                 "navigation": {
-                    "caller wants next month": 7,  # Loops back to providing a day/time
+                    "caller wants next month": 7,
                     "caller wants next year": 12,
                     "caller wants to go back to scheduling": 0,
                 },
@@ -97,8 +135,8 @@ class NodeManager:
             14: {
                 "instruction": "Confirming next-year scheduling. You might lose your current slot. Continue?",
                 "navigation": {
-                    "caller wants to schedule next year": 8,  # Goes to booking final
-                    "caller wants to schedule the appointment again": 9,  # Standard exit
+                    "caller wants to schedule next year": 8,
+                    "caller wants to schedule the appointment again": 9,
                     "caller has questions about scheduling": 15,
                 },
             },
@@ -121,7 +159,7 @@ class NodeManager:
                 "instruction": "We can expedite shipping if you confirm your address again or speak with general support.",
                 "navigation": {
                     "confirm_address_again": 6,
-                    "general_support": 5,  # Goes to terminate
+                    "general_support": 5,
                 },
             },
             18: {
@@ -260,12 +298,15 @@ class NodeManager:
             },
         }
 
-        self.node_embeddings = {}
+        # Build a dictionary of embeddings for each node
+        self.node_embeddings: Dict[int, List[float]] = {}
         for node_id, node_data in self.full_map.items():
-            text = node_data["instruction"]
-            self.node_embeddings[node_id] = self.model.encode(text)
+            instruction_text = node_data["instruction"]
+            # Call the OpenAI embedding endpoint for each instruction
+            embedding = vectorize_prompt("text-embedding-3-small", instruction_text)
+            self.node_embeddings[node_id] = embedding
 
-    def get_navigation_map(self, nodes=None):
+    def get_navigation_map(self, nodes=None) -> Dict[int, Dict[str, Any]]:
         """
         Returns a subset of the navigation map based on the given node list.
         If nodes is None or empty, the full map is returned.
@@ -281,14 +322,14 @@ class NodeManager:
         # Return the filtered map
         return {node: self.full_map[node] for node in nodes}
 
-    def get_submap_upto_node(self, target_node):
+    def get_submap_upto_node(self, target_node: int) -> Dict[int, Dict[str, Any]]:
         """
-        Build a 'path' from node 0 to the 'target_node' (if possible), then collect:
+        Build a 'path' from node 0 to 'target_node' (if possible),
+        then collect:
           - all nodes on that path
           - the children of each node on that path (if they exist)
-        Returns a sub-map (dict) that you can pass to the LLM.
+        Returns a sub-map (dict) that you can pass to your LLM.
         """
-        # 1. Find path from 0 to target_node (DFS or BFS). We'll do a simple DFS here.
         visited = set()
         path = []
 
@@ -316,17 +357,17 @@ class NodeManager:
 
         found = dfs(0, target_node, path)
         if not found:
-            # If there's no path, just return a single-node map if it exists
+            # If there's no path from 0 to target_node,
+            # just return a single-node map if it exists
             return (
                 {target_node: self.full_map[target_node]}
                 if target_node in self.full_map
                 else {}
             )
 
-        # 2. Build submap from the nodes in 'path' + the children of those nodes
+        # Build submap from the nodes in 'path' + the children of those nodes
         submap_nodes = set(path)
 
-        # For each node in the path, add its children
         for node_id in path:
             navigation = self.full_map[node_id].get("navigation", {})
             if isinstance(navigation, dict):
@@ -334,7 +375,7 @@ class NodeManager:
                     if isinstance(child, int):
                         submap_nodes.add(child)
 
-        # 3. Construct dictionary
+        # Construct the dictionary
         filtered_map = {}
         for node_id in submap_nodes:
             filtered_map[node_id] = self.full_map[node_id]

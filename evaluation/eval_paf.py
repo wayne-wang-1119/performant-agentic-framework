@@ -1,11 +1,14 @@
 import os
+import re
+import ast
+import json
+import requests
 import numpy as np
 import pandas as pd
-import ast
-import re
-from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
+from sklearn.metrics.pairwise import cosine_similarity
+from typing import List, Tuple
+
 from openai import OpenAI
 from prompt_manager import NodeManager
 from prompt_manager import PromptManager
@@ -14,12 +17,48 @@ from prompt_manager import PromptManager
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Load pre-trained model for semantic similarity
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# ------------------- Step 1: Remove SentenceTransformer usage -------------------
+# model = SentenceTransformer("all-MiniLM-L6-v2")  # <-- Removed
 
-# Instantiate NodeManager
+
+# ------------------- Step 2: Add a helper function to call OpenAI Embeddings API -------------------
+def vectorize_prompt(model: str, prompt_text: str) -> List[float]:
+    """
+    Call OpenAI's Embeddings API with the given `model` and `prompt_text`.
+    Returns a list of floats corresponding to the embedding.
+    """
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+    request_body = {"input": prompt_text, "model": model}
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {openai_api_key}",
+    }
+
+    url = "https://api.openai.com/v1/embeddings"
+    response = requests.post(url, json=request_body, headers=headers)
+
+    if response.status_code != 200:
+        raise ValueError(
+            f"OpenAI API returned status {response.status_code}: {response.text}"
+        )
+
+    data = response.json()
+    if "data" not in data or len(data["data"]) == 0:
+        raise ValueError("No data in OpenAI API response")
+
+    # Return the first embedding
+    embedding = data["data"][0]["embedding"]
+    return embedding
+
+
+# ------------------- NodeManager & Navigation Map -------------------
+# Instantiate NodeManager. Make sure your NodeManager has also been updated
+# to store embeddings via OpenAI, so that node_manager.node_embeddings is populated.
 node_manager = NodeManager()
-# still get the full map, but we'll also call get_submap_upto_node(...) later
 navigation_map = node_manager.get_navigation_map()
 
 
@@ -46,12 +85,19 @@ def clean_response(response):
     return response
 
 
+# ------------------- Step 3: Update compute_semantic_similarity to use vectorize_prompt -------------------
 def compute_semantic_similarity(response_1, response_2):
     """
-    Compute semantic similarity between two responses using cosine similarity.
+    Compute semantic similarity between two responses using cosine similarity
+    via OpenAI embeddings.
     """
-    embeddings = model.encode([response_1, response_2])
-    similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
+    # Get embeddings from OpenAI
+    emb1 = vectorize_prompt("text-embedding-3-small", response_1)
+    emb2 = vectorize_prompt("text-embedding-3-small", response_2)
+
+    # Use sklearn's cosine_similarity
+    similarity = cosine_similarity([emb1], [emb2])[0][0]
+
     # Clamp the similarity to [0.0, 1.0]
     similarity = max(0.0, min(similarity, 1.0))
     return similarity
@@ -88,18 +134,22 @@ def call_llm_to_find_step(assistant_message, conversation_history, navigation_ma
     return step_str
 
 
-def find_step_with_vectors(assistant_message: str) -> (int, float):
+# ------------------- Step 4: Update find_step_with_vectors to use OpenAI embeddings instead of model.encode(...) -------------------
+def find_step_with_vectors(assistant_message: str) -> Tuple[int, float]:
     """
     Vectorize assistant_message and compare it to each node's embedding
-    using the *dot product* rather than cosine similarity.
-
+    using the dot product or cosine similarity.
     Returns (best_node_id, best_score).
     """
-    embedding = node_manager.model.encode(assistant_message)
+    # Get the embedding for the message
+    embedding = vectorize_prompt("text-embedding-3-small", assistant_message)
+
     best_node_id = None
     best_score = float("-inf")
 
+    # Compare to each node embedding in node_manager
     for node_id, node_emb in node_manager.node_embeddings.items():
+        # Use cosine similarity
         score = cosine_similarity([embedding], [node_emb])[0][0]
         # Clamp the similarity to [0.0, 1.0]
         score = max(0.0, min(score, 1.0))
@@ -120,37 +170,24 @@ def format_flow_steps(flow_map):
     """
     lines = []
     for step_number, step_info in flow_map.items():
-        # Extract the instruction
         instruction = step_info.get("instruction", "No instruction found")
-
-        # Start building our line for this step
         line = f"On step {step_number} you have instruction '{instruction}'."
 
-        # Get navigation info, which might be a dict or a string
         navigation = step_info.get("navigation")
-
         if isinstance(navigation, dict):
-            # If navigation is a dictionary, iterate through its conditions
             for condition, next_step in navigation.items():
                 line += f" Based on condition '{condition}', you can go to step {next_step}."
         elif isinstance(navigation, str):
-            # If navigation is a simple string (like "terminate" or "transfer"), mention that
             line += f" Navigation action: {navigation}."
-        else:
-            # If there's no valid navigation, just skip
-            pass
-
+        # else: no valid navigation - skip
         lines.append(line)
-
-    # Join everything into one big string (or you could return as a list)
     return "\n".join(lines)
 
 
-# File paths
+# ------------------- Main code to load CSV, process, evaluate similarity -------------------
 INPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/dataset.csv")
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/eval_paf.csv")
 
-# Load dataset
 df = pd.read_csv(INPUT_FILE)
 
 # Standardize column names if needed
@@ -190,18 +227,20 @@ for idx, row in df.iterrows():
         while i < len(convo_history):
             turn = messages[i]
 
-            # if the turn is from the assistant (dataset's assistant),
+            # If the turn is from the assistant (dataset's assistant),
             # we add it to the conversation context, then run the step-finder.
             if turn["role"] == "assistant":
                 assistant_msg = turn["content"]
-                # --- Step finder logic: vector method + LLM method ---
+
+                # 1) Step finder logic: vector method + LLM method
                 vector_step_id, vector_step_score = find_step_with_vectors(
                     assistant_msg
                 )
                 llm_step_str = call_llm_to_find_step(
                     assistant_msg, messages, current_system_prompt
                 )
-                # Decide which step to use (vector vs LLM)
+
+                # 2) Decide which step to use (vector vs LLM)
                 if vector_step_id is not None:
                     step_str = str(vector_step_id)
                     print(
@@ -213,13 +252,13 @@ for idx, row in df.iterrows():
                     step_str = llm_step_str
                     print("Using LLM method for step:", llm_step_str)
 
-                # Convert step_str to an integer if possible
+                # 3) Convert step_str to int
                 try:
                     step_identifier = int(re.findall(r"\d+", step_str)[0])
                 except Exception:
                     step_identifier = 0
 
-                # Build submap and update system prompt
+                # 4) Build submap and update system prompt
                 submap = node_manager.get_submap_upto_node(step_identifier)
                 current_navi_map = format_flow_steps(submap)
                 current_system_prompt = (
@@ -230,18 +269,18 @@ for idx, row in df.iterrows():
                 )
 
             elif turn["role"] == "user":
-                # The turn is from user:
+                # 1) Append user message
                 user_msg = turn["content"]
                 messages.append({"role": "user", "content": user_msg})
 
-                # Now call the LLM to generate a new assistant message
+                # 2) Call LLM to get new assistant message
                 assistant_reply = call_llm(current_system_prompt, messages, user_msg)
                 assistant_reply = clean_response(assistant_reply)
 
                 generated_response = assistant_reply
                 messages.append({"role": "assistant", "content": assistant_reply})
 
-                # --- Step finder logic on newly generated assistant message ---
+                # 3) Step finder logic
                 vector_step_id, vector_step_score = find_step_with_vectors(
                     assistant_reply
                 )
@@ -265,7 +304,6 @@ for idx, row in df.iterrows():
                 except Exception:
                     step_identifier = 0
 
-                # Build submap for the new step
                 submap = node_manager.get_submap_upto_node(step_identifier)
                 current_navi_map = format_flow_steps(submap)
                 current_system_prompt = (
@@ -274,6 +312,7 @@ for idx, row in df.iterrows():
                     f"Below is a partial navigation map relevant to your current step:\n{current_navi_map}\n\n"
                     "Now continue from that context."
                 )
+
             i += 1
 
         # 8) Evaluate similarity
