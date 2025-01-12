@@ -144,66 +144,101 @@ for idx, row in df.iterrows():
             semantic_similarities.append(None)
             continue
 
-        # 1) Omit last assistant message if it exists
-        if convo_history[-1]["role"] == "assistant":
-            convo_history.pop()
+        messages = [convo_history[0]]  # Add the first assistant message
+        generated_response = None
 
-        # 2) Omit last user message if it exists
-        last_user_message = None
-        if convo_history and convo_history[-1]["role"] == "user":
-            last_user_message = convo_history[-1]["content"]
-            convo_history.pop()
+        # We'll keep a "current_system_prompt" that can get updated with submap info
+        current_system_prompt = system_prompt
 
-        if not last_user_message:
-            print(f"Row {idx}: No last user message. Skipping.")
-            semantic_similarities.append(None)
-            continue
+        i = 0
+        while i < len(convo_history):
+            turn = messages[i]
 
-        # 3) Parallel: Call vector method & LLM method to find the step
-        assistant_msg_for_step = convo_history[-1]["content"]
-        vector_step_id, vector_step_score = find_step_with_vectors(
-            assistant_msg_for_step
-        )
+            # if the turn is from the assistant (dataset's assistant),
+            # we add it to the conversation context, then run the step-finder.
+            if turn["role"] == "assistant":
+                assistant_msg = turn["content"]
+                # --- Step finder logic: vector method + LLM method ---
+                vector_step_id, vector_step_score = find_step_with_vectors(
+                    assistant_msg
+                )
+                llm_step_str = call_llm_to_find_step(
+                    assistant_msg, messages, navigation_map
+                )
 
-        llm_step_str = call_llm_to_find_step(
-            assistant_msg_for_step, convo_history, navigation_map
-        )
+                # Decide which step to use (vector vs LLM)
+                if vector_step_id is not None:
+                    step_str = str(vector_step_id)
+                    print(
+                        "Using vector method for step:",
+                        vector_step_id,
+                        vector_step_score,
+                    )
+                else:
+                    step_str = llm_step_str
+                    print("Using LLM method for step:", llm_step_str)
 
-        # If vector_step_id is not None, it passed the threshold; otherwise use llm_step_str
-        if vector_step_id is not None:
-            print(
-                "Using vector method to find step.", vector_step_id, vector_step_score
-            )
-            step_str = str(vector_step_id)
-        else:
-            print("Using LLM method to find step.", llm_step_str)
-            step_str = llm_step_str
+                # Convert step_str to an integer if possible
+                try:
+                    step_identifier = int(re.findall(r"\d+", step_str)[0])
+                except Exception:
+                    step_identifier = 0
 
-        # 4) Convert step_str to integer if possible
-        try:
-            step_identifier = int(re.findall(r"\d+", step_str)[0])
-        except Exception:
-            step_identifier = 0  # fallback, or skip row
+                # Build submap and update system prompt
+                submap = node_manager.get_submap_upto_node(step_identifier)
+                current_system_prompt = (
+                    f"{system_prompt}\n\n"
+                    f"You were at step {step_identifier} based on the latest assistant message.\n"
+                    f"Below is a partial navigation map relevant to your current step:\n{submap}\n\n"
+                    "Now continue from that context."
+                )
 
-        # 5) Build a sub-map with the path from node 0 to step_identifier
-        #    plus the children of each node in that path
-        submap = node_manager.get_submap_upto_node(step_identifier)
+            elif turn["role"] == "user":
+                # The turn is from user:
+                user_msg = turn["content"]
+                messages.append({"role": "user", "content": user_msg})
 
-        # 6) Augment system prompt
-        system_prompt_modified = (
-            f"{system_prompt}\n\n"
-            f"You were at step {step_identifier} based on the latest assistant message.\n"
-            f"Below is a partial navigation map relevant to your current step:\n{submap}\n\n"
-            "Now continue from that context."
-        )
+                # Now call the LLM to generate a new assistant message
+                assistant_reply = call_llm(current_system_prompt, messages, user_msg)
+                assistant_reply = clean_response(assistant_reply)
 
-        # 7) Generate a new assistant response
-        generated_response = call_llm(
-            system_prompt_modified,
-            convo_history,
-            last_user_message,
-        )
-        generated_response = clean_response(generated_response)
+                generated_response = assistant_reply
+                messages.append({"role": "assistant", "content": assistant_reply})
+
+                # --- Step finder logic on newly generated assistant message ---
+                vector_step_id, vector_step_score = find_step_with_vectors(
+                    assistant_reply
+                )
+                llm_step_str = call_llm_to_find_step(
+                    assistant_reply, messages, navigation_map
+                )
+
+                if vector_step_id is not None:
+                    step_str = str(vector_step_id)
+                    print(
+                        "Using vector method for step:",
+                        vector_step_id,
+                        vector_step_score,
+                    )
+                else:
+                    step_str = llm_step_str
+                    print("Using LLM method for step:", llm_step_str)
+
+                try:
+                    step_identifier = int(re.findall(r"\d+", step_str)[0])
+                except Exception:
+                    step_identifier = 0
+
+                # Build submap for the new step
+                submap = node_manager.get_submap_upto_node(step_identifier)
+                current_system_prompt = (
+                    f"{system_prompt}\n\n"
+                    f"You were at step {step_identifier} based on the latest assistant message.\n"
+                    f"Below is a partial navigation map relevant to your current step:\n{submap}\n\n"
+                    "Now continue from that context."
+                )
+
+            i += 1
 
         # 8) Evaluate similarity
         similarity_score = compute_semantic_similarity(
