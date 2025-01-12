@@ -71,26 +71,34 @@ for idx, row in df.iterrows():
         golden_response = row["golden_response"]
         convo_history = ast.literal_eval(convo_history)
         golden_response = clean_response(ast.literal_eval(golden_response))
-        if convo_history[-1]["role"] == "assistant":
-            convo_history = convo_history[:-1]
+        messages = [convo_history[0]]  # Add the first assistant message
+        generated_response = None
+        i = 0
+        while i < len(convo_history):
+            turn = convo_history[i]
 
-        last_user_message = next(
-            (
-                msg["content"]
-                for msg in reversed(convo_history)
-                if msg["role"] == "user"
-            ),
-            None,
-        )
-        if not last_user_message:
-            print(f"Row {idx}: No user message found. Skipping.")
-            semantic_similarities.append(None)
-            continue
+            if turn["role"] == "user":
+                # 1) Add the user message
+                user_msg = turn["content"]
+                messages.append({"role": "user", "content": user_msg})
 
-        # Call LLM to generate a response
-        generated_response = call_llm(system_prompt, convo_history, last_user_message)
-        generated_response = clean_response(generated_response)
+                # 2) Call LLM to get an assistant response
+                assistant_reply = call_llm(system_prompt, messages, user_msg)
+                assistant_reply = clean_response(assistant_reply)
 
+                # 3) Keep track of the latest generated assistant response
+                generated_response = assistant_reply
+
+                # 4) Append that assistant reply into the messages
+                messages.append({"role": "assistant", "content": assistant_reply})
+
+            else:
+                # For "assistant" messages in the dataset, we do NOT call the LLM.
+                pass
+
+            i += 1
+        # Now, after processing all user messages, generated_response should hold
+        # the *last* assistant response from the LLM.
         # Evaluate similarity
         similarity_score = compute_semantic_similarity(
             generated_response, golden_response
