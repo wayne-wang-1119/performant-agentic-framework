@@ -171,8 +171,12 @@ for idx, row in df.iterrows():
 
         # If vector_step_id is not None, it passed the threshold; otherwise use llm_step_str
         if vector_step_id is not None:
+            print(
+                "Using vector method to find step.", vector_step_id, vector_step_score
+            )
             step_str = str(vector_step_id)
         else:
+            print("Using LLM method to find step.", llm_step_str)
             step_str = llm_step_str
 
         # 4) Convert step_str to integer if possible
