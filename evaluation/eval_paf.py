@@ -100,15 +100,50 @@ def find_step_with_vectors(assistant_message: str) -> (int, float):
     best_score = float("-inf")
 
     for node_id, node_emb in node_manager.node_embeddings.items():
-        dot_val = np.dot(embedding, node_emb)  # Dot product
-        if dot_val > best_score:
-            best_score = dot_val
+        score = cosine_similarity([embedding], [node_emb])[0][0]
+        # Clamp the similarity to [0.0, 1.0]
+        score = max(0.0, min(score, 1.0))
+        if score > best_score:
+            best_score = score
             best_node_id = node_id
 
-    # If best_score > 0.3, we consider that "good enough"; otherwise we return None
-    if best_score > 0.3:
+    # If best_score > 0.96, we consider that "good enough"; otherwise we return None
+    if best_score > 0.96:
         return best_node_id, best_score
     return None, 0.0
+
+
+def format_flow_steps(flow_map):
+    """
+    Given a dictionary of steps (flow_map), return a string describing
+    each step, its instruction, and its navigation options.
+    """
+    lines = []
+    for step_number, step_info in flow_map.items():
+        # Extract the instruction
+        instruction = step_info.get("instruction", "No instruction found")
+
+        # Start building our line for this step
+        line = f"On step {step_number} you have instruction '{instruction}'."
+
+        # Get navigation info, which might be a dict or a string
+        navigation = step_info.get("navigation")
+
+        if isinstance(navigation, dict):
+            # If navigation is a dictionary, iterate through its conditions
+            for condition, next_step in navigation.items():
+                line += f" Based on condition '{condition}', you can go to step {next_step}."
+        elif isinstance(navigation, str):
+            # If navigation is a simple string (like "terminate" or "transfer"), mention that
+            line += f" Navigation action: {navigation}."
+        else:
+            # If there's no valid navigation, just skip
+            pass
+
+        lines.append(line)
+
+    # Join everything into one big string (or you could return as a list)
+    return "\n".join(lines)
 
 
 # File paths
@@ -149,6 +184,7 @@ for idx, row in df.iterrows():
 
         # We'll keep a "current_system_prompt" that can get updated with submap info
         current_system_prompt = system_prompt
+        current_navi_map = format_flow_steps(node_manager.get_navigation_map())
 
         i = 0
         while i < len(convo_history):
@@ -163,9 +199,8 @@ for idx, row in df.iterrows():
                     assistant_msg
                 )
                 llm_step_str = call_llm_to_find_step(
-                    assistant_msg, messages, navigation_map
+                    assistant_msg, messages, current_system_prompt
                 )
-
                 # Decide which step to use (vector vs LLM)
                 if vector_step_id is not None:
                     step_str = str(vector_step_id)
@@ -186,10 +221,11 @@ for idx, row in df.iterrows():
 
                 # Build submap and update system prompt
                 submap = node_manager.get_submap_upto_node(step_identifier)
+                current_navi_map = format_flow_steps(submap)
                 current_system_prompt = (
                     f"{system_prompt}\n\n"
                     f"You were at step {step_identifier} based on the latest assistant message.\n"
-                    f"Below is a partial navigation map relevant to your current step:\n{submap}\n\n"
+                    f"Below is a partial navigation map relevant to your current step:\n{current_navi_map}\n\n"
                     "Now continue from that context."
                 )
 
@@ -210,7 +246,7 @@ for idx, row in df.iterrows():
                     assistant_reply
                 )
                 llm_step_str = call_llm_to_find_step(
-                    assistant_reply, messages, navigation_map
+                    assistant_reply, messages, current_system_prompt
                 )
 
                 if vector_step_id is not None:
@@ -231,13 +267,13 @@ for idx, row in df.iterrows():
 
                 # Build submap for the new step
                 submap = node_manager.get_submap_upto_node(step_identifier)
+                current_navi_map = format_flow_steps(submap)
                 current_system_prompt = (
                     f"{system_prompt}\n\n"
                     f"You were at step {step_identifier} based on the latest assistant message.\n"
-                    f"Below is a partial navigation map relevant to your current step:\n{submap}\n\n"
+                    f"Below is a partial navigation map relevant to your current step:\n{current_navi_map}\n\n"
                     "Now continue from that context."
                 )
-
             i += 1
 
         # 8) Evaluate similarity
