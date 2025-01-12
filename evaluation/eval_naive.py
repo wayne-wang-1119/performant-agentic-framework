@@ -14,9 +14,6 @@ from typing import List
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Load pre-trained model for semantic similarity
-model = SentenceTransformer("all-MiniLM-L6-v2")
-
 # File paths
 INPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/dataset.csv")
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/eval_naive.csv")
