@@ -67,7 +67,7 @@ class NodeManager:
                 "navigation": {
                     "end_call": 10,
                     "still_need_help": 11,
-                    "off rails": 12,
+                    "off_rails": 12,
                 },
             },
             10: {
@@ -75,18 +75,157 @@ class NodeManager:
                 "navigation": "terminate",
             },
             11: {
-                "instruction": "I can schedule that for you what day are you looking for us to come out?",
+                "instruction": "I can schedule that for you. What day are you looking for us to come out?",
                 "navigation": {
                     "provide_day": 7,
+                    "node_13": 13,
                 },
             },
             12: {
-                "instruction": "I would love to help answer that question, but I am only able to schedule appointments. Would you like to schedule an appointment?",
+                "instruction": "I would love to help answer that question, but I can only schedule appointments. Would you like to schedule an appointment?",
                 "navigation": {
                     "book_appointment": 1,
                     "other_services": 5,
                     "end_call": 10,
+                    "node_15": 15,
                 },
+            },
+            13: {
+                "instruction": "You mentioned needing specialized service. Could you clarify the type of service requested?",
+                "navigation": {
+                    "special_service_A": 14,
+                    "go_back": 12,
+                },
+            },
+            14: {
+                "instruction": "Special Service A might require additional fees. Are you comfortable with that?",
+                "navigation": {
+                    "yes_extra_fees": 5,
+                    "no_cancel": 10,
+                    "node_16": 16,
+                },
+            },
+            15: {
+                "instruction": "I understand you have a question about your recent invoice. Would you like me to transfer you to billing?",
+                "navigation": {
+                    "transfer_billing": 5,
+                    "schedule_appointment": 1,
+                    "node_17": 17,
+                },
+            },
+            16: {
+                "instruction": "We’ll need a contract for that. Do you have an existing contract number?",
+                "navigation": {
+                    "has_contract": 18,
+                    "no_contract": 19,
+                },
+            },
+            17: {
+                "instruction": "It seems your question is out of scope. I can provide a frequently asked questions document or schedule an appointment. Which would you prefer?",
+                "navigation": {
+                    "faqs": 20,
+                    "schedule_again": 1,
+                },
+            },
+            18: {
+                "instruction": "Please provide the contract number, and I’ll check if it’s valid.",
+                "navigation": {
+                    "contract_provided": 21,
+                    "go_back": 14,
+                },
+            },
+            19: {
+                "instruction": "Without a contract, I can’t proceed. Would you like to speak to a sales representative?",
+                "navigation": {
+                    "sales_rep": 22,
+                    "end_call": 10,
+                },
+            },
+            20: {
+                "instruction": "Here is the FAQ link: companyx.com/faq. Does this answer your questions?",
+                "navigation": {
+                    "faq_helpful": 9,
+                    "node_23": 23,
+                },
+            },
+            21: {
+                "instruction": "Great, I see your contract is active. Do you need to add any special notes to your account?",
+                "navigation": {
+                    "add_notes": 24,
+                    "no_notes": 9,
+                },
+            },
+            22: {
+                "instruction": "Please hold while I attempt to transfer you to a sales representative.",
+                "navigation": "terminate",
+            },
+            23: {
+                "instruction": "I’m sorry the FAQ link wasn’t helpful. Let me route you to a more specialized team.",
+                "navigation": {
+                    "specialized_team": 5,
+                    "node_25": 25,
+                },
+            },
+            24: {
+                "instruction": "All notes are updated. Anything else we can assist you with?",
+                "navigation": {
+                    "no_further_questions": 9,
+                    "add_more_notes": 21,
+                },
+            },
+            25: {
+                "instruction": "You appear to have more detailed inquiries. Could you describe them in detail?",
+                "navigation": {
+                    "describe_inquiry": 26,
+                    "end_call": 10,
+                },
+            },
+            26: {
+                "instruction": "Thank you. Based on your description, we might have to escalate this to Tier 2 support.",
+                "navigation": {
+                    "escalate_tier2": 27,
+                    "book_appointment": 1,
+                },
+            },
+            27: {
+                "instruction": "Tier 2 support is available 9 AM - 6 PM on weekdays. Shall I connect you now?",
+                "navigation": {
+                    "connect_tier2": 5,
+                    "no_connect": 28,
+                },
+            },
+            28: {
+                "instruction": "Would you prefer to schedule a callback from Tier 2 support?",
+                "navigation": {
+                    "schedule_callback": 1,
+                    "decline_help": 10,
+                    "node_29": 29,
+                },
+            },
+            29: {
+                "instruction": "I’m sensing this issue might actually require an in-person appointment. Please confirm?",
+                "navigation": {
+                    "in_person_yes": 6,
+                    "in_person_no": 10,
+                },
+            },
+            30: {
+                "instruction": "This node might cause confusion regarding shipping or inventory. Are you checking on an order?",
+                "navigation": {
+                    "order_status": 31,
+                    "no_order": 9,
+                },
+            },
+            31: {
+                "instruction": "We have no record of your order. Please confirm your order ID, or we can schedule an appointment to discuss further.",
+                "navigation": {
+                    "confirm_order": 32,
+                    "no_order_id": 10,
+                },
+            },
+            32: {
+                "instruction": "Order ID found. Let me direct you to the logistics team.",
+                "navigation": "terminate",
             },
         }
 
