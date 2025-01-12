@@ -239,6 +239,13 @@ class NodeManager:
                     "back_to_main": 0,
                 },
             },
+            34: {
+                "instruction": "What can I help you with today? I can assist with scheduling appointments or provide information on our services.",
+                "navigation": {
+                    "confirm": 8,
+                    "does_not_want_schedule": 0,
+                },
+            },
         }
 
         self.node_embeddings = {}
