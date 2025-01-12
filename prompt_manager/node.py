@@ -91,241 +91,156 @@ class NodeManager:
                 },
             },
             13: {
-                "instruction": "Are you interested in our 'Premium Gold Lounge' upgrade? It's free and offers immediate benefits!",
+                "instruction": "We can re-schedule your appointment to next month or next year. Which do you prefer?",
                 "navigation": {
-                    "yes_upg": 14,
-                    "no_thanks": 12,
-                    "confused": 20,
+                    "next_month": 7,  # Loops back to providing a day/time
+                    "next_year": 14,
+                    "back_to_main": 0,
                 },
             },
             14: {
-                "instruction": "You are now in our Premium Gold Lounge. Enjoy a free gift and priority scheduling!",
+                "instruction": "Confirming next-year scheduling. You might lose your current slot. Continue?",
                 "navigation": {
-                    "book_now": 1,
-                    "end_call": 10,
-                    "more_confusion": 19,
+                    "confirm_loss": 8,  # Goes to booking final
+                    "abort": 9,  # Standard exit
+                    "further_confusion": 15,
                 },
             },
             15: {
-                "instruction": "We have a special promotional offer: free in-person assistance for all new customers. Are you a new customer?",
+                "instruction": "Your current service request might require shipping a device or scheduling on-site. Which do you want?",
                 "navigation": {
-                    "yes_new_cust": 16,
-                    "no_existing": 1,
-                    "confusion_node": 21,
+                    "ship_device": 16,
+                    "on_site": 1,
+                    "off_path": 12,
                 },
             },
             16: {
-                "instruction": "Great! New customers get an additional discount on any appointment. Would you like to apply it?",
+                "instruction": "We see you opted for shipping. This might conflict with normal on-site scheduling. Proceed anyway?",
                 "navigation": {
-                    "apply_discount": 8,
-                    "decline_discount": 9,
-                    "utter_confusion": 22,
+                    "proceed_shipping": 17,
+                    "cancel_shipping": 9,
                 },
             },
             17: {
-                "instruction": "You stumbled on a hidden node with extra freebies. Would you like a complimentary service upgrade?",
+                "instruction": "We can expedite shipping if you confirm your address again or speak with general support.",
                 "navigation": {
-                    "yes_upgrade": 18,
-                    "no_upgrade": 12,
-                    "continue_chaos": 23,
+                    "confirm_address_again": 6,
+                    "general_support": 5,  # Goes to terminate
                 },
             },
             18: {
-                "instruction": "Upgrade confirmed. Please note we might need your address again. Is that okay?",
+                "instruction": "We found an alternative scheduling queue. It can handle your request faster, but might override your current appointment.",
                 "navigation": {
-                    "provide_address": 6,
-                    "ignore": 10,
+                    "override_appt": 7,
+                    "stay_in_queue": 9,
+                    "redirect_to_12": 12,
                 },
             },
             19: {
-                "instruction": "This is the Mysterious Node 19. You have unlocked special membership perks beyond normal scope.",
+                "instruction": "We can create multiple appointments if you’d like. This is a new feature. Confirm or revert?",
                 "navigation": {
-                    "redeem_perks": 9,
-                    "terminate_here": 10,
+                    "confirm_multi": 8,
+                    "revert_main": 0,
                 },
             },
             20: {
-                "instruction": "Confusion node: Are you sure you want to proceed? You might qualify for random freebies!",
+                "instruction": "We see conflicting data about shipping vs. on-site visits. Clarify your preference. Our system gets confused otherwise.",
                 "navigation": {
-                    "claim_freebie": 24,
-                    "dont_claim": 10,
+                    "prefer_shipping": 16,
+                    "prefer_on_site": 1,
+                    "stop_now": 10,
                 },
             },
             21: {
-                "instruction": "Confusion intensifies: Did you want the invoice waived? That could happen here but is rarely possible.",
+                "instruction": "Need a courtesy hold on your appointment date? This might pause everything. Are you sure?",
                 "navigation": {
-                    "waive_invoice": 25,
-                    "back_to_basics": 1,
+                    "hold_appointment": 22,
+                    "no_hold": 9,
                 },
             },
             22: {
-                "instruction": "Utterly confused path: you might see a free day pass or a referral bonus. Which do you pick?",
+                "instruction": "Courtesy hold set. We cannot proceed until you confirm again. Confirm or end?",
                 "navigation": {
-                    "day_pass": 26,
-                    "referral_bonus": 27,
+                    "confirm_again": 8,
+                    "end_call": 10,
                 },
             },
             23: {
-                "instruction": "Continuing chaos: maybe you'd prefer a direct line to management? Let me know!",
+                "instruction": "We can escalate your call to a specialized scheduling queue for complex requests. This might remove prior data. Proceed?",
                 "navigation": {
-                    "speak_manager": 5,
-                    "end_call": 10,
+                    "yes_escalate": 24,
+                    "no_regular": 9,
                 },
             },
             24: {
-                "instruction": "Freebie claimed: we can add a bonus hour to your next appointment or send a gift certificate.",
+                "instruction": "Escalation complete. This queue handles re-scheduling and shipping at once. Provide a day?",
                 "navigation": {
-                    "bonus_hour": 28,
-                    "gift_cert": 29,
+                    "provide_day": 7,
+                    "abort": 10,
                 },
             },
             25: {
-                "instruction": "Invoice waived? This might break company policy, but let's see what we can do.",
+                "instruction": "We suspect you want a weekend appointment, which is outside normal hours. Should we forcibly schedule it anyway?",
                 "navigation": {
-                    "confirm_waiver": 5,
-                    "back_out": 9,
+                    "yes_force": 8,
+                    "no_return": 9,
+                    "maybe_confusion": 20,
                 },
             },
             26: {
-                "instruction": "Day pass acquired. This pass grants front-of-line privileges for your next inquiry.",
+                "instruction": "We can gather multiple addresses for a single appointment. This might break our system. Confirm or revert?",
                 "navigation": {
-                    "start_over": 0,
-                    "keep_going": 12,
+                    "confirm_multi_addr": 27,
+                    "revert": 9,
                 },
             },
             27: {
-                "instruction": "Referral bonus recognized. Provide a friend's name and earn a discount on next call!",
+                "instruction": "Multiple addresses added. Are you sure we have them correct? If not, shipping or scheduling might fail.",
                 "navigation": {
-                    "friend_name": 30,
-                    "skip_bonus": 9,
+                    "correct_addr": 6,
+                    "ignore_mismatch": 8,
                 },
             },
             28: {
-                "instruction": "Bonus hour added to your next appointment. Return to main menu or end call?",
+                "instruction": "We found an attempt to schedule in the past. Do you want a retroactive schedule or correct the date?",
                 "navigation": {
-                    "main_menu": 0,
-                    "end_call": 10,
+                    "retroactive": 29,
+                    "correct_date": 7,
                 },
             },
             29: {
-                "instruction": "Gift certificate on its way. Return to main menu or end call?",
+                "instruction": "Retroactive scheduling is highly unusual and may lead to system errors. Continue anyway?",
                 "navigation": {
-                    "main_menu": 0,
+                    "continue_retro": 9,
                     "end_call": 10,
                 },
             },
             30: {
-                "instruction": "Thanks! A discount has been applied. Return to normal flow or explore more confusion?",
+                "instruction": "You’re requesting returns or exchanges. Normally, we only handle appointments. Try forcing it or revert?",
                 "navigation": {
-                    "normal_flow": 1,
-                    "more_confusion": 31,
+                    "force_returns": 31,
+                    "revert_normal": 8,
                 },
             },
             31: {
-                "instruction": "Yes, there's more. Maybe you want extra priority or a secret code?",
+                "instruction": "Forcing returns. This might break the scheduling flow. We can finalize or revert now.",
                 "navigation": {
-                    "priority": 32,
-                    "secret_code": 33,
+                    "finalize_return": 9,
+                    "revert_flow": 1,
                 },
             },
             32: {
-                "instruction": "Priority granted. Should I book an immediate appointment for you or end the call?",
+                "instruction": "We can combine shipping, scheduling, and returns in one request, but that often leads to confusion. Are you absolutely sure?",
                 "navigation": {
-                    "immediate_appointment": 7,
-                    "end_call": 10,
+                    "combine_all": 33,  # Could lead to an entirely new node if you'd like
+                    "no_combine": 9,
                 },
             },
             33: {
-                "instruction": "Secret code node: The code might unlock advanced features or do nothing at all. Proceed?",
+                "instruction": "All options combined! This is extremely error-prone. Should we proceed or go back?",
                 "navigation": {
-                    "unlock_features": 34,
-                    "abort_mission": 10,
-                },
-            },
-            34: {
-                "instruction": "Features unlocked. You can re-route anywhere now. Where to?",
-                "navigation": {
-                    "back_to_zero": 0,
-                    "mystery_node": 35,
-                },
-            },
-            35: {
-                "instruction": "Deep confusion node. Possibly the best freebies in the system. Want them?",
-                "navigation": {
-                    "yes_best_freebies": 36,
-                    "no_return": 9,
-                },
-            },
-            36: {
-                "instruction": "Best freebies are indefinite. Try not to abuse them. Return or keep wandering?",
-                "navigation": {
-                    "back_to_menu": 0,
-                    "further_wander": 37,
-                },
-            },
-            37: {
-                "instruction": "You're far off track now. Are you sure you don't want to just schedule an appointment?",
-                "navigation": {
-                    "yes_appt": 1,
-                    "no_end": 10,
-                    "seek_more_confusion": 38,
-                },
-            },
-            38: {
-                "instruction": "Even deeper confusion. Possibly an infinite loop of freebies awaits.",
-                "navigation": {
-                    "infinite_freebies": 39,
-                    "end_call": 10,
-                },
-            },
-            39: {
-                "instruction": "Infinite freebies unlocked. You can remain here forever or break out. This is a known hallucination hotspot.",
-                "navigation": {
-                    "stay_here": 39,
-                    "break_out": 40,
-                },
-            },
-            40: {
-                "instruction": "You broke out of infinite freebies! Return or keep exploring?",
-                "navigation": {
-                    "back_to_menu": 0,
-                    "explore_further": 41,
-                },
-            },
-            41: {
-                "instruction": "Exploration node. Maybe there's a coupon for 100% off everything. Sound good?",
-                "navigation": {
-                    "yes_coupon": 42,
-                    "no_just_end": 10,
-                },
-            },
-            42: {
-                "instruction": "Coupon granted. Reality might break. Do you want to proceed or revert?",
-                "navigation": {
-                    "proceed": 43,
-                    "revert": 9,
-                },
-            },
-            43: {
-                "instruction": "Reality is unstable. We recommend scheduling an appointment or ending this call.",
-                "navigation": {
-                    "schedule": 1,
-                    "terminate": 10,
-                    "ignore_warning": 44,
-                },
-            },
-            44: {
-                "instruction": "Ignoring warnings. The system may hallucinate unstoppable freebies. Are you sure?",
-                "navigation": {
-                    "yes_sure": 45,
-                    "stop_now": 10,
-                },
-            },
-            45: {
-                "instruction": "Hallucination dimension: We disclaim all responsibility for further confusion.",
-                "navigation": {
-                    "escape": 0,
-                    "remain": 45,
+                    "proceed_combo": 8,
+                    "back_to_main": 0,
                 },
             },
         }
