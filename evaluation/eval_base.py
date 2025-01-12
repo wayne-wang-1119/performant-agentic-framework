@@ -182,7 +182,8 @@ for idx, row in df.iterrows():
                     f"You were at step {step_id} based on the latest assistant message.\n"
                     "Now continue from that context."
                 )
-                messages.append(convo_history[i + 1])
+                if i + 1 < len(convo_history):
+                    messages.append(convo_history[i + 1])
 
             elif turn["role"] == "user":
                 # 1) Append user message
