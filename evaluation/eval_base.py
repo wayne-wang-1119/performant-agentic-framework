@@ -115,42 +115,48 @@ for idx, row in df.iterrows():
             semantic_similarities.append(None)
             continue
 
-        # 1) Omit the last assistant message if it exists
-        #    Check if last role is 'assistant'.
-        last_assistant_message = None
-        if convo_history and convo_history[-1]["role"] == "assistant":
-            last_assistant_message = convo_history[-1]["content"]
-            # remove last assistant message
-            convo_history = convo_history[:-1]
+        # We'll build the conversation *turn by turn*, calling the LLM whenever
+        # we see a user message. We will also call the step-finder logic
+        # *immediately after* each new assistant response.
 
-        # 2) Also hide the last user message if it exists to simulate real time conversation
-        # Where the  back and forth communication will be audited by the LLM and add additional information while streaming to TTS to help augement the next generation.
-        # For simplicity, we will just do this statically here but the latency optimizing implementation is described in the paper.
-        #    Check if last role is 'user'.
-        last_user_message = None
-        if convo_history and convo_history[-1]["role"] == "user":
-            last_user_message = convo_history[-1]["content"]
-            # remove last user message
-            convo_history = convo_history[:-1]
+        # 1) We start a local `messages` list that will accumulate everything
+        messages = [convo_history[0]]  # Add the first assistant message
+        generated_response = None
 
-        # We might want to identify the step from the last assistant message
-        step_identifier = call_llm_to_find_step(
-            convo_history[-1]["content"], convo_history, navigation_map
-        )
+        # 2) Prepare an initial system prompt that can be updated each turn
+        #    if we want to insert step info along the way.
+        current_system_prompt = system_prompt
 
-        # 3) Augment the system prompt with a line about the step
-        #    "You were at step {step_identifier}"
-        system_prompt_modified = (
-            f"{system_prompt}\n\n"
-            f"You were at step {step_identifier} based on the latest assistant message.\n"
-            "Now continue from that context."
-        )
+        i = 0
+        while i < len(convo_history):
+            turn = messages[i]
 
-        # -- Call LLM to generate a response --
-        generated_response = call_llm(
-            system_prompt_modified, convo_history, last_user_message
-        )
-        generated_response = clean_response(generated_response)
+            if turn["role"] == "assistant":
+                messages.append({"role": "assistant", "content": turn["content"]})
+                step_id = call_llm_to_find_step(
+                    turn["content"], messages, navigation_map
+                )
+                current_system_prompt = (
+                    f"{system_prompt}\n\n"
+                    f"You were at step {step_id} based on the latest assistant message.\n"
+                    "Now continue from that context."
+                )
+
+            elif turn["role"] == "user":
+                # 1) Append user message
+                user_msg = turn["content"]
+                messages.append({"role": "user", "content": user_msg})
+
+                # 2) Call LLM to get new assistant response
+                assistant_reply = call_llm(current_system_prompt, messages, user_msg)
+                assistant_reply = clean_response(assistant_reply)
+
+                generated_response = assistant_reply
+
+                # 3) Append that assistant reply to our messages
+                messages.append({"role": "assistant", "content": assistant_reply})
+
+            i += 1
 
         # Evaluate similarity
         similarity_score = compute_semantic_similarity(
