@@ -106,7 +106,7 @@ def find_step_with_vectors(assistant_message: str) -> (int, float):
             best_node_id = node_id
 
     # If best_score > 0.5, we consider that "good enough"; otherwise we return None
-    if best_score > 0.5:
+    if best_score > 0.3:
         return best_node_id, best_score
     return None, 0.0
 
