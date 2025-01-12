@@ -64,11 +64,7 @@ class NodeManager:
             },
             9: {
                 "instruction": "Thank you for calling Company X. Have a great day!",
-                "navigation": {
-                    "end_call": 10,
-                    "still_need_help": 11,
-                    "off_rails": 12,
-                },
+                "navigation": "terminate",
             },
             10: {
                 "instruction": "Goodbye! Have a great day!",
