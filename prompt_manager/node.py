@@ -232,7 +232,7 @@ class NodeManager:
             32: {
                 "instruction": "We can combine shipping, scheduling, and returns in one request, but that often leads to confusion. Are you absolutely sure?",
                 "navigation": {
-                    "combine_all": 33,  # Could lead to an entirely new node if you'd like
+                    "combine_all": 33,
                     "no_combine": 9,
                 },
             },
