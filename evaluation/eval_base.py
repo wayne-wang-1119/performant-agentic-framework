@@ -16,6 +16,7 @@ from prompt_manager import PromptManager
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+
 def vectorize_prompt(model: str, prompt_text: str) -> List[float]:
     """
     Call OpenAI's Embeddings API with the given `model` and `prompt_text`.
@@ -161,7 +162,9 @@ for idx, row in df.iterrows():
         # We'll build the conversation turn by turn,
         # calling the LLM whenever we see a user message,
         # and call the step-finder logic *immediately after* each new assistant response.
-        messages = [convo_history[0]]  # Add the first assistant message
+        messages = [
+            convo_history[0],
+        ]  # Add the first assistant message
         generated_response = None
 
         current_system_prompt = system_prompt
@@ -179,6 +182,7 @@ for idx, row in df.iterrows():
                     f"You were at step {step_id} based on the latest assistant message.\n"
                     "Now continue from that context."
                 )
+                messagess.append(convo_history[i+1])
 
             elif turn["role"] == "user":
                 # 1) Append user message

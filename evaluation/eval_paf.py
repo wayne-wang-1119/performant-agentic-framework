@@ -216,7 +216,9 @@ for idx, row in df.iterrows():
             semantic_similarities.append(None)
             continue
 
-        messages = [convo_history[0]]  # Add the first assistant message
+        messages = [
+            convo_history[0],
+        ]  # Add the first assistant message
         generated_response = None
 
         # We'll keep a "current_system_prompt" that can get updated with submap info
@@ -267,6 +269,7 @@ for idx, row in df.iterrows():
                     f"Below is a partial navigation map relevant to your current step:\n{current_navi_map}\n\n"
                     "Now continue from that context."
                 )
+                messagess.append(convo_history[i + 1])
 
             elif turn["role"] == "user":
                 # 1) Append user message
