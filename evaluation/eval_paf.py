@@ -39,8 +39,8 @@ def find_step_with_vectors(assistant_message: str) -> Tuple[int, float]:
 
     # Compare to each node embedding in node_manager
     for node_id, node_emb in node_manager.node_embeddings.items():
-        # Use cosine similarity
-        score = cosine_similarity(embedding, node_emb)
+        # Use dot product
+        score = dot_product(embedding, node_emb)
         if score > best_score:
             best_score = score
             best_node_id = node_id
