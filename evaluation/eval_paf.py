@@ -59,7 +59,8 @@ def vectorize_prompt(model: str, prompt_text: str) -> List[float]:
 # Instantiate NodeManager. Make sure your NodeManager has also been updated
 # to store embeddings via OpenAI, so that node_manager.node_embeddings is populated.
 node_manager = NodeManager()
-navigation_map = node_manager.get_navigation_map()
+navigation_map = node_manager.get_submap_upto_node(0)
+print("0 Navigation Map:", navigation_map)
 
 
 def call_llm(system_prompt, conversation_history, user_message):
