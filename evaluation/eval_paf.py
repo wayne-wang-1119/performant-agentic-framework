@@ -6,7 +6,6 @@ import requests
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
-from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Tuple
 
 from openai import OpenAI
@@ -41,9 +40,7 @@ def find_step_with_vectors(assistant_message: str) -> Tuple[int, float]:
     # Compare to each node embedding in node_manager
     for node_id, node_emb in node_manager.node_embeddings.items():
         # Use cosine similarity
-        score = cosine_similarity([embedding], [node_emb])[0][0]
-        # Clamp the similarity to [0.0, 1.0]
-        score = max(0.0, min(score, 1.0))
+        score = cosine_similarity(embedding, node_emb)
         if score > best_score:
             best_score = score
             best_node_id = node_id
