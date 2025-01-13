@@ -101,7 +101,7 @@ class NodeManager:
                 },
             },
             9: {
-                "instruction": "Thank you for calling Company X. Have a great day!",
+                "instruction": "Have a great day!",
                 "navigation": "terminate",
             },
             10: {
