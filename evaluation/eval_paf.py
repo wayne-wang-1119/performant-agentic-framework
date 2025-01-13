@@ -23,7 +23,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # to store embeddings via OpenAI, so that node_manager.node_embeddings is populated.
 node_manager = NodeManager()
 navigation_map = node_manager.get_submap_upto_node(0)
-print("0 Navigation Map:", navigation_map)
+print("Initial Navigation Map:", navigation_map)
 
 
 def find_step_with_vectors(assistant_message: str) -> Tuple[int, float]:
