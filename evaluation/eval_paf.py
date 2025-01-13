@@ -11,7 +11,7 @@ from typing import List, Tuple
 from openai import OpenAI
 from prompt_manager import NodeManager
 from prompt_manager import PromptManager
-from utils import *
+from .utils import *
 
 # Load environment variables
 load_dotenv()
