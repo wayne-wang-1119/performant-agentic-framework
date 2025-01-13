@@ -88,7 +88,7 @@ for idx, row in df.iterrows():
         ]  # Add the first user message
         generated_response = None
 
-        # We'll keep a "current_system_prompt" that can get updated with submap info
+        # We'll keep a few states that can get updated with submap info
         current_system_prompt = prompt_manager.get()
         current_navi_map = format_flow_steps(navigation_map)
         step = 0
@@ -133,7 +133,7 @@ for idx, row in df.iterrows():
                 submap = node_manager.get_submap_upto_node(step_identifier)
                 current_navi_map = format_flow_steps(submap)
                 current_system_prompt = (
-                    f"{system_prompt}\n\n"
+                    f"{current_system_prompt}\n\n"
                     f"You were at step {step} based on the latest assistant message.\n"
                     f"Below is a partial navigation map relevant to your current step:\n{current_navi_map}\n\n"
                     "Now continue from that context."
@@ -143,8 +143,6 @@ for idx, row in df.iterrows():
 
             elif turn["role"] == "user":
                 user_msg = turn["content"]
-
-                # 2) Call LLM to get new assistant message
                 assistant_reply = call_llm(current_system_prompt, messages, user_msg)
                 assistant_reply = clean_response(assistant_reply)
 
