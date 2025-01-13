@@ -22,7 +22,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # to store embeddings via OpenAI, so that node_manager.node_embeddings is populated.
 node_manager = NodeManager()
 navigation_map = node_manager.get_submap_upto_node(0)
-print("Initial Navigation Map:", navigation_map)
+prompt_manager = PromptManager(node_manager)
 
 
 def find_step_with_vectors(assistant_message: str) -> Tuple[int, float]:
@@ -80,7 +80,7 @@ for idx, row in df.iterrows():
         if not convo_history:
             print(f"Row {idx}: Empty conversation history. Skipping.")
             semantic_similarities.append(None)
-            continue
+            break
 
         messages = [
             convo_history[0],
@@ -89,7 +89,7 @@ for idx, row in df.iterrows():
         generated_response = None
 
         # We'll keep a "current_system_prompt" that can get updated with submap info
-        current_system_prompt = system_prompt
+        current_system_prompt = prompt_manager.get()
         current_navi_map = format_flow_steps(navigation_map)
         step = 0
 
@@ -151,7 +151,7 @@ for idx, row in df.iterrows():
                 generated_response = assistant_reply
                 messages.append({"role": "assistant", "content": assistant_reply})
 
-                print("=====================================================")
+                print("X" * 50)
                 print("Map we are using:", current_navi_map)
                 print("System prompt we are using:", current_system_prompt)
 
