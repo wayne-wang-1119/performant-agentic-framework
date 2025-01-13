@@ -216,7 +216,7 @@ for idx, row in df.iterrows():
 
     except Exception as e:
         print(f"Error processing row {idx}: {e}")
-        semantic_similarities.append(None)
+        break
 
 # Add results to DataFrame
 df["base_semantic_similarity"] = semantic_similarities
