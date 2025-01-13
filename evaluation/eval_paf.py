@@ -90,7 +90,8 @@ for idx, row in df.iterrows():
 
         # We'll keep a "current_system_prompt" that can get updated with submap info
         current_system_prompt = system_prompt
-        current_navi_map = format_flow_steps(node_manager.get_navigation_map())
+        current_navi_map = format_flow_steps(navigation_map)
+        step = 0
 
         i = 1
         while i < len(convo_history):
@@ -101,7 +102,7 @@ for idx, row in df.iterrows():
             if turn["role"] == "assistant":
                 assistant_msg = turn["content"]
 
-                # 1) Step finder logic: vector method + LLM method
+                # 1) Step finder logic: vector method + LLM method, parallel both to optimize latency
                 vector_step_id, vector_step_score = find_step_with_vectors(
                     assistant_msg
                 )
@@ -111,20 +112,21 @@ for idx, row in df.iterrows():
 
                 # 2) Decide which step to use (vector vs LLM)
                 if vector_step_id is not None:
-                    step_str = str(vector_step_id)
+                    step = str(vector_step_id)
                     print(
                         "Using vector method for step:",
                         vector_step_id,
                         vector_step_score,
                     )
                 else:
-                    step_str = llm_step_str
+                    step = llm_step_str
                     print("Using LLM method for step:", llm_step_str)
 
-                # 3) Convert step_str to int
+                # 3) Convert step to integer
                 try:
-                    step_identifier = int(re.findall(r"\d+", step_str)[0])
+                    step_identifier = int(re.findall(r"\d+", step)[0])
                 except Exception:
+                    print("Error converting step to integer. Using 0.")
                     step_identifier = 0
 
                 # 4) Build submap and update system prompt
@@ -132,17 +134,15 @@ for idx, row in df.iterrows():
                 current_navi_map = format_flow_steps(submap)
                 current_system_prompt = (
                     f"{system_prompt}\n\n"
-                    f"You were at step {step_identifier} based on the latest assistant message.\n"
+                    f"You were at step {step} based on the latest assistant message.\n"
                     f"Below is a partial navigation map relevant to your current step:\n{current_navi_map}\n\n"
                     "Now continue from that context."
                 )
                 if i + 1 < len(convo_history):
-                    messages.append(convo_history[i + 1])
+                    messages.append(convo_history[i + 1])  # Add the next user message
 
             elif turn["role"] == "user":
-                # 1) Append user message
                 user_msg = turn["content"]
-                messages.append({"role": "user", "content": user_msg})
 
                 # 2) Call LLM to get new assistant message
                 assistant_reply = call_llm(current_system_prompt, messages, user_msg)
@@ -150,39 +150,6 @@ for idx, row in df.iterrows():
 
                 generated_response = assistant_reply
                 messages.append({"role": "assistant", "content": assistant_reply})
-
-                # 3) Step finder logic
-                vector_step_id, vector_step_score = find_step_with_vectors(
-                    assistant_reply
-                )
-                llm_step_str = call_llm_to_find_step(
-                    assistant_reply, messages, current_navi_map
-                )
-
-                if vector_step_id is not None:
-                    step_str = str(vector_step_id)
-                    print(
-                        "Using vector method for step:",
-                        vector_step_id,
-                        vector_step_score,
-                    )
-                else:
-                    step_str = llm_step_str
-                    print("Using LLM method for step:", llm_step_str)
-
-                try:
-                    step_identifier = int(re.findall(r"\d+", step_str)[0])
-                except Exception:
-                    step_identifier = 0
-
-                submap = node_manager.get_submap_upto_node(step_identifier)
-                current_navi_map = format_flow_steps(submap)
-                current_system_prompt = (
-                    f"{system_prompt}\n\n"
-                    f"You were at step {step_identifier} based on the latest assistant message.\n"
-                    f"Below is a partial navigation map relevant to your current step:\n{current_navi_map}\n\n"
-                    "Now continue from that context."
-                )
 
                 print("=====================================================")
                 print("Map we are using:", current_navi_map)
