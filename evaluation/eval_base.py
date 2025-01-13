@@ -52,7 +52,7 @@ for idx, row in df.iterrows():
         # Convert stored string data back to Python objects
         convo_history = ast.literal_eval(convo_history_str)
         golden_response = clean_response(ast.literal_eval(golden_response_str))
-       if not convo_history:
+        if not convo_history:
             print(f"Row {idx}: Empty conversation history. Skipping.")
             semantic_similarities.append(None)
             break
@@ -73,9 +73,7 @@ for idx, row in df.iterrows():
             turn = messages[i]
 
             if turn["role"] == "assistant":
-                step = call_llm_to_find_step(
-                    turn["content"], messages, navigation_map
-                )
+                step = call_llm_to_find_step(turn["content"], messages, navigation_map)
                 # 3) Convert step to integer
                 try:
                     step_identifier = int(re.findall(r"\d+", step)[0])
