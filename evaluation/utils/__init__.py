@@ -1,3 +1,24 @@
+import math
+import os
+import re
+import ast
+import json
+import requests
+import numpy as np
+import pandas as pd
+from dotenv import load_dotenv
+from typing import List, Tuple
+
+from openai import OpenAI
+from prompt_manager import NodeManager
+from prompt_manager import PromptManager
+from utils import *
+
+# Load environment variables
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+
 def vectorize_prompt(model: str, prompt_text: str) -> List[float]:
     """
     Call OpenAI's Embeddings API with the given `model` and `prompt_text`.
@@ -62,12 +83,7 @@ def compute_semantic_similarity(response_1, response_2):
     # Get embeddings from OpenAI
     emb1 = vectorize_prompt("text-embedding-3-small", response_1)
     emb2 = vectorize_prompt("text-embedding-3-small", response_2)
-
-    # Use sklearn's cosine_similarity
-    similarity = cosine_similarity([emb1], [emb2])[0][0]
-
-    # Clamp the similarity to [0.0, 1.0]
-    similarity = max(0.0, min(similarity, 1.0))
+    similarity = cosine_similarity(emb1, emb2)
     return similarity
 
 
@@ -180,3 +196,44 @@ def format_flow_steps(flow_map):
         # else: no valid navigation - skip
         lines.append(line)
     return "\n".join(lines)
+
+
+def cosine_similarity(vec1, vec2):
+    """
+    Compute the cosine similarity between two vectors (lists of floats).
+    Returns a float in the range [0.0, 1.0] (or 0.0 if vectors are empty or mismatched).
+    """
+    if len(vec1) != len(vec2) or len(vec1) == 0:
+        return 0.0
+
+    dot_product = 0.0
+    norm1 = 0.0
+    norm2 = 0.0
+
+    for x, y in zip(vec1, vec2):
+        dot_product += x * y
+        norm1 += x * x
+        norm2 += y * y
+
+    norm1 = math.sqrt(norm1)
+    norm2 = math.sqrt(norm2)
+
+    if norm1 == 0.0 or norm2 == 0.0:
+        return 0.0
+
+    return dot_product / (norm1 * norm2)
+
+
+def dot_product(vec1, vec2):
+    """
+    Compute the dot product of two vectors (lists of floats).
+    Returns a float (or 0.0 if vectors are empty or mismatched).
+    """
+    if len(vec1) != len(vec2) or len(vec1) == 0:
+        return 0.0
+
+    result = 0.0
+    for x, y in zip(vec1, vec2):
+        result += x * y
+
+    return result
