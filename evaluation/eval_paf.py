@@ -25,6 +25,7 @@ node_manager = NodeManager()
 navigation_map = node_manager.get_submap_upto_node(0)
 print("0 Navigation Map:", navigation_map)
 
+
 def find_step_with_vectors(assistant_message: str) -> Tuple[int, float]:
     """
     Vectorize assistant_message and compare it to each node's embedding
@@ -53,7 +54,6 @@ def find_step_with_vectors(assistant_message: str) -> Tuple[int, float]:
     return None, 0.0
 
 
-# ------------------- Main code to load CSV, process, evaluate similarity -------------------
 INPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/dataset.csv")
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/eval_paf.csv")
 
