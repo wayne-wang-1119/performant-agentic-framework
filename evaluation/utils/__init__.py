@@ -76,15 +76,22 @@ def clean_response(response):
     return response
 
 
+def sanitize_string_literal(s):
+    """
+    Replace smart quotes or other problematic characters with standard quotes.
+    """
+    if isinstance(s, str):
+        s = s.replace("’", "'").replace("‘", "'")
+        s = s.replace("“", '"').replace("”", '"')
+    return s
+
+
 def safe_literal_eval(val):
-    """
-    Safely evaluate a string using ast.literal_eval.
-    If evaluation fails, log the error and return None.
-    """
     import ast
 
     try:
-        return ast.literal_eval(val)
+        sanitized_val = sanitize_string_literal(val)
+        return ast.literal_eval(sanitized_val)
     except Exception as e:
         print(f"Error parsing value: {val}\nError: {e}")
         return None
