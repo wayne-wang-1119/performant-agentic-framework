@@ -82,7 +82,7 @@ def sanitize_string_literal(s):
     """
     if isinstance(s, str):
         s = s.replace("’", "'").replace("‘", "'")
-        s = s.replace("“", '"').replace("”", '"')
+        s = s.replace(""", '"').replace(""", '"')
         s = clean_response(s)
     return s
 
@@ -141,7 +141,7 @@ You must identify the step from the navigation map that is **most similar** to t
 If multiple steps are similar, select the one with the closest **intent match**. Return the step number in JSON format.
 
 ### Additional Notes:
-- For steps that contain instructions that end the call or indicate ending the call (e.g. “Ok, goodbye for now”), treat them with extra caution when selecting as a response. Since these steps end the call, they should typically appear only once. When you are evaluating potential next steps to return, avoid prematurely ending the call.
+- For steps that contain instructions that end the call or indicate ending the call (e.g. "Ok, goodbye for now"), treat them with extra caution when selecting as a response. Since these steps end the call, they should typically appear only once. When you are evaluating potential next steps to return, avoid prematurely ending the call.
 - If the conversation is not advancing to any appropriate step, return -1.
 - When you return a step that is the end call step which has instruction that is end call message, you should only return that step if the latest assistant message is clearly the same as the end call message. 
 - You should never return a step with instructions that do not resemble what the latest assistant message tries to achieve.
