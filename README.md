@@ -16,7 +16,7 @@ pip install -r requirements.txt
 2.  Generate the dataset
 
 ```bash
-python -m data.generator.py
+python -m data.generator
 ```
 
 This will generate a dataset in the `data` folder called dataset.csv with the following columns:
@@ -34,10 +34,10 @@ python main.py
 4. Run Individual Evaluation Scripts
    We leverage score / semantic similarity to the alignment of the latest generation to the golden response.
 
-- `evaluation/eval_naive.py`: This script will evaluate the performance of the naive setup, which always sends the entire map and receives the entire response.
+- `evaluation/eval_naive`: This script will evaluate the performance of the naive setup, which always sends the entire map and receives the entire response.
 
 ```bash
-python -m evaluation.eval_naive.py
+python -m evaluation.eval_naive
 ```
 
 Same goes for the other evaluation scripts
