@@ -49,8 +49,8 @@ for idx, row in df.iterrows():
         system_prompt = row["system_prompt"]
         convo_history_str = row["convo_history"]
         golden_response_str = row["golden_response"]
-        convo_history = ast.literal_eval(convo_history_str)
-        golden_response = clean_response(ast.literal_eval(golden_response_str))
+        convo_history = safe_literal_eval(convo_history_str)
+        golden_response = clean_response(golden_response_str)
         if not convo_history:
             print(f"Row {idx}: Empty conversation history. Skipping.")
             semantic_similarities.append(None)
