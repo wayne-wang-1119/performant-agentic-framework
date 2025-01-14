@@ -98,6 +98,7 @@ class NodeManager:
                 "instruction": "Perfect! I have booked your appointment for [date and time]. Is there anything else I can assist you with?",
                 "navigation": {
                     "caller has no more quesitons": 9,
+                    "caller wants to go over the schedule again": 11,
                 },
             },
             9: {
