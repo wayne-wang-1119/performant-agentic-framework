@@ -83,7 +83,7 @@ def sanitize_string_literal(s):
     if isinstance(s, str):
         s = s.replace("’", "'").replace("‘", "'")
         s = s.replace("“", '"').replace("”", '"')
-		s = clean_response(s)
+        s = clean_response(s)
     return s
 
 
