@@ -27,7 +27,7 @@ prompt_manager = PromptManager(node_manager)
 
 # File paths
 INPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/dataset.csv")
-OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/eval_base.csv")
+OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/eval_naive.csv")
 
 # Load and preprocess dataset
 df = pd.read_csv(INPUT_FILE)
