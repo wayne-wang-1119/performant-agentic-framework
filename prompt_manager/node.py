@@ -50,32 +50,43 @@ class NodeManager:
                 "instruction": "Hello! Thank you for calling Company X. What can I help you with today?",
                 "navigation": {
                     "caller wants to book an appointment": 1,
-                    "caller asks about other_services": 5,
+                    "caller asks about other services like installation": 5,
                     "caller wants to end the call": 10,
+                    # New routes from the start node
+                    "caller wants to inquire about billing": 11,
+                    "caller asking technical support with existing product they have": 12,
                 },
             },
             1: {
                 "instruction": "Before we get started, could you please confirm both your first and last name?",
                 "navigation": {
-                    "caller confirm_name": 2,
+                    "caller confirms name": 2,
+                    # Additional branch if caller has a question about privacy
+                    "caller asks about privacy policy or does not give name": 13,
                 },
             },
             2: {
                 "instruction": "Thanks for that. Can you give me your phone number, please?",
                 "navigation": {
-                    "caller provids number": 3,
+                    "caller provides number": 3,
+                    # Option to skip providing number
+                    "caller hesitates to provide number": 14,
                 },
             },
             3: {
                 "instruction": "I have your phone number as [number]. Is that the best number to reach you?",
                 "navigation": {
-                    "caller confirm_number": 4,
+                    "caller confirms number": 4,
+                    # Option to provide an alternative number
+                    "caller want to change number on profile": 15,
                 },
             },
             4: {
                 "instruction": "Now, could I please have your full address? Please include the street, city, state, and zip code.",
                 "navigation": {
                     "caller provides address": 6,
+                    # Option if caller doesn't know the full address
+                    "caller unsure about address": 16,
                 },
             },
             5: {
@@ -86,19 +97,25 @@ class NodeManager:
                 "instruction": "Thank you. I have noted your address. What day are you looking for us to come out?",
                 "navigation": {
                     "caller provides day to schedule": 7,
+                    # Option if caller wants to reschedule an existing appointment
+                    "caller wants to reschedule": 17,
                 },
             },
             7: {
                 "instruction": "Got it. One moment while I pull available times for that day.",
                 "navigation": {
                     "caller selects a time to schedule": 8,
+                    # Option if caller wants to know more about services on that day
+                    "caller asks about service details": 18,
                 },
             },
             8: {
                 "instruction": "Perfect! I have booked your appointment for [date and time]. Is there anything else I can assist you with?",
                 "navigation": {
-                    "caller has no more quesitons": 9,
-                    "caller wants to go over the schedule again": 11,
+                    "caller has no more questions": 9,
+                    "caller wants to go over the schedule again": 11,  # Looping back to billing for additional query
+                    # New branch for additional service request after booking
+                    "caller wants to add another service": 19,
                 },
             },
             9: {
@@ -109,194 +126,251 @@ class NodeManager:
                 "instruction": "Goodbye! Have a great day!",
                 "navigation": "terminate",
             },
+            # New nodes for expanded paths
             11: {
-                "instruction": "I can schedule that for you. What day are you looking for us to come out?",
+                "instruction": "You've reached the billing department. How can we assist you with your billing question?",
                 "navigation": {
-                    "callers provides day": 7,
-                    "caller has general questions": 13,
+                    "caller asks about an invoice": 20,
+                    "caller wants to make a payment": 21,
+                    "caller dispute a charge": 22,
+                    "caller wants to go back to main menu": 0,
                 },
             },
             12: {
-                "instruction": "I would love to help answer that question, but I can only schedule appointments. Would you like to schedule an appointment?",
+                "instruction": "Technical support here. Can you describe the issue you're experiencing?",
                 "navigation": {
-                    "caller wants to book appointment": 1,
-                    "caller has reserves about other services": 5,
-                    "caller wants to end the call or is frustrated and off topic": 10,
-                    "caller has some specific inquiries": 15,
+                    "caller describes internet issues": 23,
+                    "caller describes billing software issue": 24,
+                    "caller wants to speak to a specialist": 25,
+                    "caller wants to go back to main menu": 0,
                 },
             },
             13: {
-                "instruction": "We can re-schedule your appointment to next month or next year. Which do you prefer?",
+                "instruction": "Our privacy policy ensures your data is safe. Do you have any specific questions?",
                 "navigation": {
-                    "caller wants next month": 7,
-                    "caller wants next year": 12,
-                    "caller wants to go back to scheduling": 0,
+                    "caller asks about data storage": 26,
+                    "caller asks about data sharing": 27,
+                    "caller wants to go back": 1,
                 },
             },
             14: {
-                "instruction": "Confirming next-year scheduling. You might lose your current slot. Continue?",
+                "instruction": "I understand. Would you like to continue without providing a phone number?",
                 "navigation": {
-                    "caller wants to schedule next year": 8,
-                    "caller wants to schedule the appointment again": 9,
-                    "caller has questions about scheduling": 15,
+                    "caller agrees to continue without number": 4,
+                    "caller changes mind and provides number": 3,
                 },
             },
             15: {
-                "instruction": "Your current service request might require shipping a device or scheduling on-site. Which do you want?",
+                "instruction": "Thanks for providing the alternative number. I'll update our records. Is that correct?",
                 "navigation": {
-                    "ship_device": 16,
-                    "on_site": 1,
-                    "off_path": 12,
+                    "caller confirms update": 4,
+                    "caller wants to change it again": 15,
                 },
             },
             16: {
-                "instruction": "We see you opted for shipping. This might conflict with normal on-site scheduling. Proceed anyway?",
+                "instruction": "No worries. Please provide as much of your address as you can.",
                 "navigation": {
-                    "proceed_shipping": 17,
-                    "cancel_shipping": 9,
+                    "caller provides partial address": 6,
+                    "caller cannot provide address": 28,
                 },
             },
             17: {
-                "instruction": "We can expedite shipping if you confirm your address again or speak with general support.",
+                "instruction": "Sure, let's reschedule your appointment. What new day works for you?",
                 "navigation": {
-                    "confirm_address_again": 6,
-                    "general_support": 5,
+                    "caller provides new day": 7,
+                    "caller wants to cancel appointment instead": 29,
                 },
             },
             18: {
-                "instruction": "We found an alternative scheduling queue. It can handle your request faster, but might override your current appointment.",
+                "instruction": "We offer several services on that day. Would you like details on any particular service?",
                 "navigation": {
-                    "override_appt": 7,
-                    "stay_in_queue": 9,
-                    "redirect_to_12": 12,
+                    "caller asks about service A": 30,
+                    "caller asks about service B": 31,
+                    "caller wants to speak to a service specialist": 32,
+                    "caller wants to go back": 7,
                 },
             },
             19: {
-                "instruction": "We can create multiple appointments if you’d like. This is a new feature. Confirm or revert?",
+                "instruction": "Sure, what additional service would you like to add?",
                 "navigation": {
-                    "confirm_multi": 8,
-                    "revert_main": 0,
+                    "caller wants service X": 33,
+                    "caller wants service Y": 34,
+                    "caller wants to add nothing else": 9,
                 },
             },
+            # Additional new nodes beyond 19
             20: {
-                "instruction": "We see conflicting data about shipping vs. on-site visits. Clarify your preference. Our system gets confused otherwise.",
+                "instruction": "For invoice questions, please provide your invoice number.",
                 "navigation": {
-                    "prefer_shipping": 16,
-                    "prefer_on_site": 1,
-                    "stop_now": 10,
+                    "caller provides invoice number": 35,
+                    "caller doesn't have invoice number": 36,
                 },
             },
             21: {
-                "instruction": "Need a courtesy hold on your appointment date? This might pause everything. Are you sure?",
+                "instruction": "To make a payment, please choose your payment method.",
                 "navigation": {
-                    "hold_appointment": 22,
-                    "no_hold": 9,
+                    "caller chooses credit card": 37,
+                    "caller chooses paypal": 38,
+                    "caller wants to go back": 11,
                 },
             },
             22: {
-                "instruction": "Courtesy hold set. We cannot proceed until you confirm again. Confirm or end?",
+                "instruction": "I'm sorry to hear about the charge dispute. Could you provide more details?",
                 "navigation": {
-                    "confirm_again": 8,
-                    "end_call": 10,
+                    "caller provides dispute details": 39,
+                    "caller wants to speak to a manager": 40,
                 },
             },
             23: {
-                "instruction": "We can escalate your call to a specialized scheduling queue for complex requests. This might remove prior data. Proceed?",
+                "instruction": "I'm sorry you're having internet issues. Let's run a quick diagnostic.",
                 "navigation": {
-                    "yes_escalate": 24,
-                    "no_regular": 9,
+                    "caller agrees to diagnostic": 41,
+                    "caller wants to speak to an engineer": 42,
                 },
             },
             24: {
-                "instruction": "Escalation complete. This queue handles re-scheduling and shipping at once. Provide a day?",
+                "instruction": "For billing software issues, can you specify the problem?",
                 "navigation": {
-                    "provide_day": 7,
-                    "abort": 10,
+                    "caller describes software issue": 43,
+                    "caller wants to schedule a support call": 44,
                 },
             },
             25: {
-                "instruction": "We suspect you want a weekend appointment, which is outside normal hours. Should we forcibly schedule it anyway?",
-                "navigation": {
-                    "yes_force": 8,
-                    "no_return": 9,
-                    "maybe_confusion": 20,
-                },
+                "instruction": "Connecting you to a specialist. Please hold.",
+                "navigation": "terminate by specialist transfer",
             },
+            # Further nodes can be continued similarly...
             26: {
-                "instruction": "We can gather multiple addresses for a single appointment. This might break our system. Confirm or revert?",
+                "instruction": "Our data is stored on secure servers. Your information is encrypted.",
                 "navigation": {
-                    "confirm_multi_addr": 27,
-                    "revert": 9,
+                    "caller has more questions": 13,
+                    "caller wants to go back": 1,
                 },
             },
             27: {
-                "instruction": "Multiple addresses added. Are you sure we have them correct? If not, shipping or scheduling might fail.",
+                "instruction": "We only share data with your consent or legal requirements.",
                 "navigation": {
-                    "correct_addr": 6,
-                    "ignore_mismatch": 8,
+                    "caller has more questions": 13,
+                    "caller wants to go back": 1,
                 },
             },
             28: {
-                "instruction": "We found an attempt to schedule in the past. Do you want a retroactive schedule or correct the date?",
+                "instruction": "Without your address, we might face difficulties scheduling. Can you provide at least your city and state?",
                 "navigation": {
-                    "retroactive": 29,
-                    "correct_date": 7,
+                    "caller provides partial address": 6,
+                    "caller wants to cancel": 29,
                 },
             },
             29: {
-                "instruction": "Retroactive scheduling is highly unusual and may lead to system errors. Continue anyway?",
+                "instruction": "Your appointment has been cancelled. Is there anything else I can assist you with?",
                 "navigation": {
-                    "continue_retro": 9,
-                    "end_call": 10,
+                    "caller wants to book a new appointment": 1,
+                    "caller wants to speak to someone": 5,
+                    "caller has no more questions": 9,
                 },
             },
             30: {
-                "instruction": "You’re requesting returns or exchanges. Normally, we only handle appointments. Try forcing it or revert?",
+                "instruction": "Service A includes... Would you like to schedule this service?",
                 "navigation": {
-                    "force_returns": 31,
-                    "revert_normal": 8,
+                    "caller wants to schedule service A": 1,
+                    "caller wants more information": 18,
                 },
             },
             31: {
-                "instruction": "Forcing returns. This might break the scheduling flow. We can finalize or revert now.",
+                "instruction": "Service B includes... Would you like to schedule this service?",
                 "navigation": {
-                    "finalize_return": 9,
-                    "revert_flow": 1,
+                    "caller wants to schedule service B": 1,
+                    "caller wants more information": 18,
                 },
             },
             32: {
-                "instruction": "We can combine shipping, scheduling, and returns in one request, but that often leads to confusion. Are you absolutely sure?",
-                "navigation": {
-                    "combine_all": 33,
-                    "no_combine": 9,
-                },
+                "instruction": "Connecting you to a service specialist. Please hold.",
+                "navigation": "terminate by specialist transfer",
             },
             33: {
-                "instruction": "All options combined! This is extremely error-prone. Should we proceed or go back?",
+                "instruction": "Service X added to your appointment. Anything else?",
                 "navigation": {
-                    "proceed_combo": 8,
-                    "back_to_main": 0,
+                    "caller wants another service": 19,
+                    "caller is done": 9,
                 },
             },
             34: {
-                "instruction": "What can I help you with today? I can assist with scheduling appointments or provide information on our services.",
+                "instruction": "Service Y added to your appointment. Anything else?",
                 "navigation": {
-                    "confirm": 8,
-                    "does_not_want_schedule": 0,
+                    "caller wants another service": 19,
+                    "caller is done": 9,
                 },
             },
             35: {
-                "instruction": "Interesting to hear! Can you tell me more about what you're looking for?",
+                "instruction": "Thank you. One moment while I look up your invoice.",
                 "navigation": {
-                    "provide_info": 36,
+                    "caller waiting": 20,  # Loop or additional logic for waiting...
                 },
             },
             36: {
-                "instruction": "I see. Let me check if we have that available. One moment, please.",
+                "instruction": "No problem. How else may I assist you with billing?",
                 "navigation": {
-                    "check_availability": 0,
+                    "caller asks about payment options": 21,
+                    "caller wants to go back": 11,
                 },
             },
+            37: {
+                "instruction": "Processing credit card payment. Please hold.",
+                "navigation": {
+                    "caller payment successful": 9,
+                    "caller payment failed": 22,
+                },
+            },
+            38: {
+                "instruction": "Processing PayPal payment. Please hold.",
+                "navigation": {
+                    "caller payment successful": 9,
+                    "caller payment failed": 22,
+                },
+            },
+            39: {
+                "instruction": "I will file a dispute report for you. Do you want a confirmation email?",
+                "navigation": {
+                    "caller wants email confirmation": 26,
+                    "caller declines": 9,
+                },
+            },
+            40: {
+                "instruction": "Connecting you to a manager. Please hold.",
+                "navigation": "terminate by manager transfer",
+            },
+            41: {
+                "instruction": "Running diagnostics... Please wait.",
+                "navigation": {
+                    "caller reports issue resolved": 9,
+                    "caller still has problems": 42,
+                },
+            },
+            42: {
+                "instruction": "I'll connect you to an engineer for further assistance.",
+                "navigation": "terminate by engineer transfer",
+            },
+            43: {
+                "instruction": "For software issues, try restarting the application. Did that solve the problem?",
+                "navigation": {
+                    "caller yes solved": 9,
+                    "caller still experiencing issues": 44,
+                },
+            },
+            44: {
+                "instruction": "Let's schedule a support call to dive deeper into the issue.",
+                "navigation": {
+                    "caller provides availability": 45,
+                },
+            },
+            45: {
+                "instruction": "Thank you. Your support call is scheduled. Anything else I can help you with?",
+                "navigation": {
+                    "caller no further assistance needed": 9,
+                    "caller has another issue": 12,
+                },
+            },
+            # ... continue adding nodes as needed to further expand the tree.
         }
 
         # Build a dictionary of embeddings for each node

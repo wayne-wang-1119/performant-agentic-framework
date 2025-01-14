@@ -13,9 +13,10 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # Initialize NodeManager and PromptManager
 node_manager = NodeManager()
 prompt_manager = PromptManager(node_manager)
+navigation_map = node_manager.get_submap_upto_node(0)
 
 # Define the system prompt
-system_prompt = prompt_manager.get(node_manager.get_navigation_map())
+system_prompt = prompt_manager.get()
 
 # Define user goals
 user_goals = [
@@ -27,15 +28,133 @@ user_goals = [
 ]
 
 
+def call_llm_to_find_step(assistant_message, conversation_history, navigation_map):
+    """
+    Call the LLM to find the step or the Node ID that the agent is on currently
+    based on the latest assistant message and conversation history.
+    """
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are identifying which Node ID or step number most closely "
+                "aligns with the latest assistant message. Return only the digit "
+                "that represents the Step/Node ID."
+            ),
+        },
+        {
+            "role": "system",
+            "content": """`
+### Task Instructions:
+You must identify the step from the navigation map that is **most similar** to the assistant's last response. The similarity should be based on the following criteria, in order of priority:
+1. **Intent**: Match the primary purpose or action of the assistant's last response (e.g., confirming a name, providing an explanation, asking for information, etc.).
+2. **Key Phrases**: Look for specific keywords or actions mentioned in the assistant's last response (e.g., "confirm," "name," "phone number").
+3. **Context Alignment**: Consider how the assistant's last response aligns with the expected outcomes or instructions for each step in the navigation map.
+
+### Steps to Determine the Most Similar Step:
+1. **Understand the Assistant's Intent**: Analyze the assistant's last response to identify what action it is performing (e.g., confirming a name, asking for details, etc.).
+2. **Analyze the Navigation Map**: Compare the intent and key phrases of the assistant's response with the instructions and expected behaviors for each step in the navigation map.
+3. **Choose the Closest Match**: Select the step that most closely matches the intent and key phrases of the assistant's response. 
+
+If multiple steps are similar, select the one with the closest **intent match**. Return the step number in JSON format.
+
+### Additional Notes:
+- For steps that contain instructions that end the call or indicate ending the call (e.g. "Ok, goodbye for now"), treat them with extra caution when selecting as a response. Since these steps end the call, they should typically appear only once. When you are evaluating potential next steps to return, avoid prematurely ending the call.
+- If the conversation is not advancing to any appropriate step, return -1.
+- When you return a step that is the end call step which has instruction that is end call message, you should only return that step if the latest assistant message is clearly the same as the end call message. 
+- You should never return a step with instructions that do not resemble what the latest assistant message tries to achieve.
+
+---
+
+### Task:
+Based on the navigation map, return the step that is most similar to what the AI assistant responded with in the last AI Message.
+If the conversation is not advancing to any appropriate step, return -1. 
+You should try to advance the conversation based on the latest assistant message.
+""",
+        },
+        {
+            "role": "system",
+            "content": f"Here is the latest assistant message: {assistant_message}",
+        },
+        {
+            "role": "system",
+            "content": f"Here is the navigation map: {navigation_map}",
+        },
+    ]
+    messages.extend(conversation_history)
+    print("last assistant message:", assistant_message)
+    print("conversation history:", conversation_history)
+    print("navigation map:", navigation_map)
+
+    response = client.chat.completions.create(model="gpt-4o-mini", messages=messages)
+    step_str = response.choices[0].message.content
+    print("LLM response to find step:", step_str)
+    return step_str
+
+
+def format_user_flow_steps(flow_map):
+    """
+    Given a dictionary of steps (flow_map), return a string describing
+    each step, its instruction, and its navigation options.
+    """
+    lines = []
+    for step_number, step_info in flow_map.items():
+        instruction = step_info.get("instruction", "No instruction found")
+        line = f"On step {step_number} the agent will say back'{instruction}'."
+
+        navigation = step_info.get("navigation")
+        if isinstance(navigation, dict):
+            for condition, next_step in navigation.items():
+                line += f" The Agent will try to navigate you by '{condition}', you will be moved to {next_step}."
+        elif isinstance(navigation, str):
+            line += f" The Agent's action at this step will be: {navigation}."
+        # else: no valid navigation - skip
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def format_ai_flow_steps(flow_map):
+    """
+    Given a dictionary of steps (flow_map), return a string describing
+    each step, its instruction, and its navigation options.
+    """
+    lines = []
+    for step_number, step_info in flow_map.items():
+        instruction = step_info.get("instruction", "No instruction found")
+        line = f"On step {step_number} you have instruction '{instruction}'."
+
+        navigation = step_info.get("navigation")
+        if isinstance(navigation, dict):
+            for condition, next_step in navigation.items():
+                line += f" Based on condition '{condition}', you can go to step {next_step}."
+        elif isinstance(navigation, str):
+            line += f" Navigation action: {navigation}."
+        # else: no valid navigation - skip
+        lines.append(line)
+    return "\n".join(lines)
+
+def format_convo_history(conversation_history):
+    """
+    Given a conversation history, format it as a string for display.
+    """
+    formatted_history = ""
+    for turn in conversation_history:
+        role = turn["role"]
+        content = turn["content"]
+        formatted_history += f"{"Caller" if role == "user" else "Agent"}: {content}\n"
+    return formatted_history
+
 # Function to simulate conversation using LLM
-def simulate_conversation(goal, system_prompt):
+def simulate_conversation(goal, system_prompt, navigation_map):
     conversation_history = []
     golden_response = ""
 
     # Initialize LLM with system prompt
-    assistant_prompt = system_prompt
-    user_prompt = f"You are a caller with the goal: {goal}. Start the conversation or based on the conversation history advance the conversation. Try to respond as human like as possible, which means you could likely change your idea, or have issues, or anything that is out of context. You should start from now on generate a response that a caller would say instead of assistant message. If you are sending the first message to the agent then start with simple greeting that aligns to the goal implicitly."
-    random_turns = random.randint(2, 5)
+    assistant_prompt = system_prompt + "\n" + format_ai_flow_steps(navigation_map)
+    user_sys_prompt = f"You are a caller with the goal: {goal}. Start the conversation or based on the conversation history advance the conversation. Try to respond as human like as possible, which means you could likely change your idea, or have issues, or anything that is out of context. You should start from now on generate a response that a caller would say instead of assistant message. If you are sending the first message to the agent then start with simple greeting that aligns to the goal implicitly."
+    user_sys_prompt += f"The available options for you to continue the conversation based on the currrent options are:"
+    user_prompt = user_sys_prompt + "\n" + format_user_flow_steps(navigation_map)
+    random_turns = random.randint(6, 10)
     model = "gpt-4o"  # Specify your model
     print("=====================================================")
     for _ in range(random_turns):
@@ -45,8 +164,11 @@ def simulate_conversation(goal, system_prompt):
                 model=model,
                 messages=[
                     {"role": "system", "content": user_prompt},
-                    *conversation_history,
-                    {"role": "user", "content": "Your turn to respond."},
+                    {"role": "system", "content": "Current conversation history:" + format_convo_history(conversation_history)},
+                    {
+                        "role": "system",
+                        "content": "Your turn to respond. Keep in mind that you are the caller, which is the user in the conversation history so far, instead of the assistant.",
+                    },
                 ],
                 stream=False,
             )
@@ -55,7 +177,7 @@ def simulate_conversation(goal, system_prompt):
         )
 
         conversation_history.append({"role": "user", "content": user_response})
-
+        print(f"User: {user_response}")
         # Agent's response
         assistant_response = (
             client.chat.completions.create(
@@ -63,7 +185,7 @@ def simulate_conversation(goal, system_prompt):
                 messages=[
                     {"role": "system", "content": assistant_prompt},
                     *conversation_history,
-                    {"role": "assistant", "content": "Your turn to respond."},
+                    {"role": "system", "content": "Your turn to respond."},
                 ],
                 stream=False,
             )
@@ -74,24 +196,36 @@ def simulate_conversation(goal, system_prompt):
         conversation_history.append(
             {"role": "assistant", "content": assistant_response}
         )
+        print(f"Assistant: {assistant_response}")
+
+        last_step = call_llm_to_find_step(
+            assistant_response, conversation_history, navigation_map
+        )
+
+        if last_step != -1:
+            print(f"Last step: {last_step}")
+            # Update the navigation map based on the last step
+            navigation_map = node_manager.get_submap_upto_node(int(last_step))
+            assistant_prompt = system_prompt + "\n" + format_ai_flow_steps(navigation_map)
+            user_prompt = user_sys_prompt + "\n" + format_user_flow_steps(navigation_map)
 
         # Store golden response
         golden_response = assistant_response
 
-        print(f"User: {user_response}")
-        print(f"Assistant: {assistant_response}")
+        print(f"Final User: {user_response}")
+        print(f"Final Assistant: {assistant_response}")
     print("=====================================================")
 
     return conversation_history, golden_response
 
 
 # Function to determine the golden response based on the navigation map and the last agent message
-def determine_golden_response(conversation_history, system_prompt):
+def determine_golden_response(conversation_history, navigation_map):
     last_agent_message = conversation_history[-1]["content"]
 
-    prompt = f"Based on the following navigation map and system prompt, identify the node instruction that most closely aligns with the last agent message. If the user requests a different service, ensure the golden response corresponds to the transfer node. Always and only return the original instruction of the node that is being said by the Agent, if it does not exist then return empty string. Do not return anything else. System Prompt:\n{system_prompt}\n\nLast Agent Message:\n{last_agent_message}\n\nGolden Response:"  # Explicit prompt for LLM
-
-    model = "gpt-4o"  # Specify your model
+    prompt = f"Based on the following navigation map and system prompt, identify the node instruction that most closely aligns with the last agent message. If the user requests a different service, ensure the golden response corresponds to the transfer node. Always and only return the original instruction of the node that is being said by the Agent, if it does not exist then return empty string. Do not return anything else. System Prompt:\n{navigation_map}\n\nLast Agent Message:\n{last_agent_message}\n"
+    prompt = f"The conversation history is: {format_convo_history(conversation_history)}\n\n You should only return the node instructions with the "  # Add a new line for separation
+    model = "gpt-4o"
     golden_response = (
         client.chat.completions.create(
             model=model,
