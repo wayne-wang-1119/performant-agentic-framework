@@ -70,9 +70,9 @@ def clean_response(response):
         response = response.strip('"')
         response = response.strip()
 	else:
-		response = str(response)
-		response = response.strip('"')
-		response = response.strip()
+        response = str(response)
+        response = response.strip('"')
+        response = response.strip()
     return response
 
 
