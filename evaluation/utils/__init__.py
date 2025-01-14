@@ -78,11 +78,12 @@ def clean_response(response):
 
 def sanitize_string_literal(s):
     """
-    Replace smart quotes or other problematic characters with standard quotes.
+    Replace problematic quotes and characters with safer alternatives.
     """
     if isinstance(s, str):
         s = s.replace("’", "'").replace("‘", "'")
         s = s.replace("“", '"').replace("”", '"')
+		s = clean_response(s)
     return s
 
 
