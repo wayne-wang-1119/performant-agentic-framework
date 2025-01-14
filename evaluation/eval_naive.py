@@ -9,6 +9,8 @@ from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 from openai import OpenAI
 from typing import List
+from prompt_manager import NodeManager
+from prompt_manager import PromptManager
 from .utils import *
 
 # Load environment variables
