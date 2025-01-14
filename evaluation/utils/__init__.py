@@ -76,6 +76,20 @@ def clean_response(response):
     return response
 
 
+def safe_literal_eval(val):
+    """
+    Safely evaluate a string using ast.literal_eval.
+    If evaluation fails, log the error and return None.
+    """
+    import ast
+
+    try:
+        return ast.literal_eval(val)
+    except Exception as e:
+        print(f"Error parsing value: {val}\nError: {e}")
+        return None
+
+
 def compute_semantic_similarity(response_1, response_2):
     """
     Compute semantic similarity between two responses using cosine similarity
