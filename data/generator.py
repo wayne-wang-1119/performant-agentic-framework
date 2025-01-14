@@ -216,7 +216,7 @@ def simulate_conversation(goal, system_prompt, navigation_map):
         print(f"Final Assistant: {assistant_response}")
     print("=====================================================")
 
-    return conversation_history, golden_response
+    return conversation_history, navigation_map
 
 
 # Function to determine the golden response based on the navigation map and the last agent message
@@ -247,8 +247,8 @@ golden_responses = []
 
 for goal in user_goals:
     for _ in range(10):  # Simulate 10 conversations per goal, totaling 50 conversations
-        convo_history, _ = simulate_conversation(goal, system_prompt)
-        golden_response = determine_golden_response(convo_history, system_prompt)
+        convo_history, updated_navigation_map = simulate_conversation(goal, system_prompt, navigation_map)
+        golden_response = determine_golden_response(convo_history, updated_navigation_map)
         conversations.append(convo_history)
         golden_responses.append(golden_response)
 
