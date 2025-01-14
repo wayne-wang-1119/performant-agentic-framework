@@ -20,7 +20,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # Instantiate NodeManager. Make sure your NodeManager has also been updated
 # to store embeddings via OpenAI, so that node_manager.node_embeddings is populated.
 node_manager = NodeManager()
-navigation_map = node_manager.get_submap_upto_node(0)
+navigation_map = node_manager.get_submap_upto_node(10)
 prompt_manager = PromptManager(node_manager)
 
 # File paths
