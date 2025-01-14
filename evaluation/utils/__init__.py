@@ -69,6 +69,10 @@ def clean_response(response):
     if isinstance(response, str):
         response = response.strip('"')
         response = response.strip()
+	else:
+		response = str(response)
+		response = response.strip('"')
+		response = response.strip()
     return response
 
 
@@ -113,32 +117,6 @@ You must identify the step from the navigation map that is **most similar** to t
 3. **Choose the Closest Match**: Select the step that most closely matches the intent and key phrases of the assistant's response. 
 
 If multiple steps are similar, select the one with the closest **intent match**. Return the step number in JSON format.
-
-### Examples:
-#### Example 1:
-- **Assistant's Last Message**: "So just to confirm, your name is John Doe, and the phone number is 123-456-7890. Is that correct?"
-- **Most Similar Step**: Step 46 (Confirming name or details)
-- **Reason**: The intent of confirming a name aligns directly with the instructions in Step 46.
-
-#### Example 2:
-- **Assistant's Last Message**: "Okay, let's cancel your existing appointment. Can you provide the phone number or email you used to book the appointment?"
-- **Most Similar Step**: Step 5 (Requesting phone number or email to cancel an appointment)
-- **Reason**: The action of requesting phone/email to cancel matches Step 5.
-
-#### Example 3:
-- **Assistant's Last Message**: "Got it, unfortunately, we cannot book teen appointments over the phone."
-- **Most Similar Step**: Step 9 (Informing the user about teen appointment booking policy)
-- **Reason**: The message aligns with the specific instructions for handling teen bookings in Step 9.
-
-#### Example 4:
-- ** Conversation History **:
-- **Assistant's Last Message**: "You are all set! Your appointment is confirmed for three PM on December fifth. Is there anything else I can assist you with before we wrap  up? "
-- **User's Last Message**: "yeah like i mean can you double check my number i just wanna make sure you got it right "
-- **Navigation Map**:
-On step 5, you should say: "[Confirm the caller has no more questions]". 
-On step 9, you should say: "Ok goodbye for now."
-- **Most Similar Step**: Step 5
-- **Reason**: The assistant's last message aligns with the expected behavior for Step 5, which involves confirming the caller has no more questions before wrapping up the call.
 
 ### Additional Notes:
 - For steps that contain instructions that end the call or indicate ending the call (e.g. “Ok, goodbye for now”), treat them with extra caution when selecting as a response. Since these steps end the call, they should typically appear only once. When you are evaluating potential next steps to return, avoid prematurely ending the call.
