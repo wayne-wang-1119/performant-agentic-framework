@@ -69,7 +69,7 @@ def clean_response(response):
     if isinstance(response, str):
         response = response.strip('"')
         response = response.strip()
-	else:
+    else:
         response = str(response)
         response = response.strip('"')
         response = response.strip()
