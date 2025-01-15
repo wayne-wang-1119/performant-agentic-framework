@@ -83,13 +83,16 @@ for idx, row in df.iterrows():
                 if i + 1 < len(convo_history):
                     messages.append(convo_history[i + 1])  # Add the next user message
 
-                step = call_llm_to_find_step(turn["content"], messages, navigation_map)
-                if step != -1 and step != "-1":
+                current_step = call_llm_to_find_step(
+                    turn["content"], messages, navigation_map
+                )
+                if current_step != -1 and current_step != "-1":
                     try:
-                        step_identifier = int(re.findall(r"\d+", step)[0])
+                        step_identifier = int(current_step)
+                        step = current_step
                     except Exception:
-                        print("Error converting step to integer. Using 0.")
-                        step_identifier = 0
+                        print("Error converting step to integer. Using previous step.")
+                        step_identifier = int(step)
                 last_node_type = node_manager.full_map[step_identifier]
                 if "terminate" in str(last_node_type):
                     print(

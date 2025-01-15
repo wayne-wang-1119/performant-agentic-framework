@@ -111,23 +111,23 @@ for idx, row in df.iterrows():
 
                 # 2) Decide which step to use (vector vs LLM)
                 if vector_step_id is not None:
-                    step = str(vector_step_id)
+                    current_step = str(vector_step_id)
                     print(
                         "Using vector method for step:",
                         vector_step_id,
                         vector_step_score,
                     )
                 else:
-                    step = llm_step_str
+                    current_step = llm_step_str
                     print("Using LLM method for step:", llm_step_str)
 
-                if step != -1 and step != "-1":
-                    # 3) Convert step to integer
+                if current_step != -1 and current_step != "-1":
                     try:
-                        step_identifier = int(step)
+                        step_identifier = int(current_step)
+                        step = current_step
                     except Exception:
-                        print("Error converting step to integer. Using 0.")
-                        step_identifier = 0
+                        print("Error converting step to integer. Using previous step.")
+                        step_identifier = int(step)
 
                 # 4) Build submap and update system prompt
                 submap = node_manager.get_submap_upto_node(step_identifier)

@@ -71,14 +71,16 @@ for idx, row in df.iterrows():
             turn = messages[i]
 
             if turn["role"] == "assistant":
-                step = call_llm_to_find_step(turn["content"], messages, navigation_map)
-                # 3) Convert step to integer
-                if step != -1 and step != "-1":
+                current_step = call_llm_to_find_step(
+                    turn["content"], messages, navigation_map
+                )
+                if current_step != -1 and current_step != "-1":
                     try:
-                        step_identifier = int(step)
+                        step_identifier = int(current_step)
+                        step = current_step
                     except Exception:
-                        print("Error converting step to integer. Using 0.")
-                        step_identifier = 0
+                        print("Error converting step to integer. Using previous step.")
+                        step_identifier = int(step)
 
                 # 4) Build submap and update system prompt
                 submap = node_manager.get_submap_upto_node(step_identifier)
