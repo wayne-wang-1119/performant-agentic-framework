@@ -226,6 +226,11 @@ def simulate_conversation(goal, system_prompt, navigation_map):
                 user_sys_prompt + "\n" + format_user_flow_steps(navigation_map)
             )
 
+            last_node_type = node_manager.full_map[last_step]
+            if "terminate" in str(last_node_type):
+                print("--------------------- Conversation ended. ---------------------")
+                break
+
         # Store golden response
         golden_response = assistant_response
 
