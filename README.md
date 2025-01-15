@@ -7,6 +7,7 @@ arena experiment code for PAF, including the dataset
 1. Install the required packages
 
 ```bash
+brew install python3.12
 pip install virtualenv
 virtualenv venv
 source venv/bin/activate
