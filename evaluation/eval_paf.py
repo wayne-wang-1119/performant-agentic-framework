@@ -46,7 +46,7 @@ def find_step_with_vectors(
                 best_score = score
                 best_node_id = node_id
 
-    # If best_score > 0.96, we consider that "good enough"; otherwise we return None
+    # If best_score > 0.8, we consider that "good enough"; otherwise we return None
     if best_score > 0.8:
         return best_node_id, best_score
     return None, 0.0
