@@ -1,5 +1,4 @@
 import os
-import requests
 from typing import List, Dict, Any
 from dotenv import load_dotenv
 

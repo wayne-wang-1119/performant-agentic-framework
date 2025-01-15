@@ -1,8 +1,6 @@
 import os
 import pandas as pd
 import json
-import ast
-from sklearn.metrics.pairwise import cosine_similarity
 from dotenv import load_dotenv
 from openai import OpenAI
 from typing import List
