@@ -7,6 +7,7 @@ arena experiment code for PAF, including the dataset
 1. Install the required packages
 
 ```bash
+brew install python3.12
 pip install virtualenv
 virtualenv venv
 source venv/bin/activate
@@ -16,7 +17,7 @@ pip install -r requirements.txt
 2.  Generate the dataset
 
 ```bash
-python data/generator.py
+python -m data.generator
 ```
 
 This will generate a dataset in the `data` folder called dataset.csv with the following columns:
@@ -27,10 +28,17 @@ This will generate a dataset in the `data` folder called dataset.csv with the fo
 
 3. Run the experiment
 
-We leverage score / semantic similarity to the alignment of the latest generation to the golden response.
+```bash
+python main.py
+```
 
-- `evaluation/eval_naive.py`: This script will evaluate the performance of the naive setup, which always sends the entire map and receives the entire response.
+4. Run Individual Evaluation Scripts
+   We leverage score / semantic similarity to the alignment of the latest generation to the golden response.
+
+- `evaluation/eval_naive`: This script will evaluate the performance of the naive setup, which always sends the entire map and receives the entire response.
 
 ```bash
-python evaluation/eval_naive.py
+python -m evaluation.eval_naive
 ```
+
+Same goes for the other evaluation scripts

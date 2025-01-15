@@ -1,12 +1,9 @@
 import os
-import re
 import ast
 import json
-import requests
-import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
-from typing import List, Tuple
+from typing import Tuple
 
 from openai import OpenAI
 from prompt_manager import NodeManager
@@ -25,7 +22,9 @@ navigation_map = node_manager.get_submap_upto_node(0)
 prompt_manager = PromptManager(node_manager)
 
 
-def find_step_with_vectors(assistant_message: str) -> Tuple[int, float]:
+def find_step_with_vectors(
+    assistant_message: str, current_node_id: int
+) -> Tuple[int, float]:
     """
     Vectorize assistant_message and compare it to each node's embedding
     using the dot product or cosine similarity.
@@ -37,16 +36,19 @@ def find_step_with_vectors(assistant_message: str) -> Tuple[int, float]:
     best_node_id = None
     best_score = float("-inf")
 
-    # Compare to each node embedding in node_manager
+    # Compare to each child node embedding in node_manager
     for node_id, node_emb in node_manager.node_embeddings.items():
         # Use dot product
-        score = dot_product(embedding, node_emb)
-        if score > best_score:
-            best_score = score
-            best_node_id = node_id
+        all_children_ids = node_manager.get_children(node_id)
+        if node_id in all_children_ids:
+            score = dot_product(embedding, node_emb)
+            print(f"Vector Node {node_id}: {score}")
+            if score > best_score:
+                best_score = score
+                best_node_id = node_id
 
-    # If best_score > 0.96, we consider that "good enough"; otherwise we return None
-    if best_score > 0.96:
+    # If best_score > threshold, we consider that "good enough"; otherwise we return None
+    if best_score > 0.4:
         return best_node_id, best_score
     return None, 0.0
 
@@ -73,8 +75,8 @@ for idx, row in df.iterrows():
         system_prompt = row["system_prompt"]
         convo_history_str = row["convo_history"]
         golden_response_str = row["golden_response"]
-        convo_history = ast.literal_eval(convo_history_str)
-        golden_response = clean_response(ast.literal_eval(golden_response_str))
+        convo_history = json.loads(convo_history_str)
+        golden_response = clean_response(golden_response_str)
 
         if not convo_history:
             print(f"Row {idx}: Empty conversation history. Skipping.")
@@ -83,7 +85,6 @@ for idx, row in df.iterrows():
 
         messages = [
             convo_history[0],
-            convo_history[1],
         ]  # Add the first user message
         generated_response = None
 
@@ -92,18 +93,29 @@ for idx, row in df.iterrows():
         current_navi_map = format_flow_steps(navigation_map)
         step = 0
 
-        i = 1
+        i = 0
         while i < len(convo_history):
             turn = messages[i]
 
             # If the turn is from the assistant (dataset's assistant),
             # we add it to the conversation context, then run the step-finder.
-            if turn["role"] == "assistant":
+            if turn["role"] == "user":
+                user_msg = turn["content"]
+                assistant_reply = call_llm(current_system_prompt, messages, user_msg)
+                assistant_reply = clean_response(assistant_reply)
+
+                generated_response = assistant_reply
+                messages.append({"role": "assistant", "content": assistant_reply})
+
+                print("X" * 50)
+                print("Map we are using:", current_navi_map)
+                print("System prompt we are using:", current_system_prompt)
+            else:
                 assistant_msg = turn["content"]
 
                 # 1) Step finder logic: vector method + LLM method, parallel both to optimize latency
                 vector_step_id, vector_step_score = find_step_with_vectors(
-                    assistant_msg
+                    assistant_msg, step
                 )
                 llm_step_str = call_llm_to_find_step(
                     assistant_msg, messages, current_navi_map
@@ -111,22 +123,23 @@ for idx, row in df.iterrows():
 
                 # 2) Decide which step to use (vector vs LLM)
                 if vector_step_id is not None:
-                    step = str(vector_step_id)
+                    current_step = str(vector_step_id)
                     print(
                         "Using vector method for step:",
                         vector_step_id,
                         vector_step_score,
                     )
                 else:
-                    step = llm_step_str
+                    current_step = llm_step_str
                     print("Using LLM method for step:", llm_step_str)
 
-                # 3) Convert step to integer
-                try:
-                    step_identifier = int(re.findall(r"\d+", step)[0])
-                except Exception:
-                    print("Error converting step to integer. Using 0.")
-                    step_identifier = 0
+                if current_step != -1 and current_step != "-1":
+                    try:
+                        step_identifier = int(current_step)
+                        step = current_step
+                    except Exception:
+                        print("Error converting step to integer. Using previous step.")
+                        step_identifier = int(step)
 
                 # 4) Build submap and update system prompt
                 submap = node_manager.get_submap_upto_node(step_identifier)
@@ -140,17 +153,12 @@ for idx, row in df.iterrows():
                 if i + 1 < len(convo_history):
                     messages.append(convo_history[i + 1])  # Add the next user message
 
-            elif turn["role"] == "user":
-                user_msg = turn["content"]
-                assistant_reply = call_llm(current_system_prompt, messages, user_msg)
-                assistant_reply = clean_response(assistant_reply)
-
-                generated_response = assistant_reply
-                messages.append({"role": "assistant", "content": assistant_reply})
-
-                print("X" * 50)
-                print("Map we are using:", current_navi_map)
-                print("System prompt we are using:", current_system_prompt)
+                last_node_type = node_manager.full_map[step_identifier]
+                if "terminate" in str(last_node_type):
+                    print(
+                        "--------------------- Conversation ended. ---------------------"
+                    )
+                    break
 
             i += 1
 

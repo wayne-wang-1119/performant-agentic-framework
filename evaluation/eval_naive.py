@@ -1,11 +1,6 @@
 import os
 import pandas as pd
 import json
-import requests
-import ast
-import re
-from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 from openai import OpenAI
 from typing import List
@@ -49,8 +44,8 @@ for idx, row in df.iterrows():
         system_prompt = row["system_prompt"]
         convo_history_str = row["convo_history"]
         golden_response_str = row["golden_response"]
-        convo_history = ast.literal_eval(convo_history_str)
-        golden_response = clean_response(ast.literal_eval(golden_response_str))
+        convo_history = json.loads(convo_history_str)
+        golden_response = clean_response(golden_response_str)
         if not convo_history:
             print(f"Row {idx}: Empty conversation history. Skipping.")
             semantic_similarities.append(None)
@@ -83,6 +78,22 @@ for idx, row in df.iterrows():
                 if i + 1 < len(convo_history):
                     messages.append(convo_history[i + 1])  # Add the next user message
 
+                current_step = call_llm_to_find_step(
+                    turn["content"], messages, navigation_map
+                )
+                if current_step != -1 and current_step != "-1":
+                    try:
+                        step_identifier = int(current_step)
+                        step = current_step
+                    except Exception:
+                        print("Error converting step to integer. Using previous step.")
+                        step_identifier = int(step)
+                last_node_type = node_manager.full_map[step_identifier]
+                if "terminate" in str(last_node_type):
+                    print(
+                        "--------------------- Conversation ended. ---------------------"
+                    )
+                    break
             i += 1
         # Now, after processing all user messages, generated_response should hold
         # the *last* assistant response from the LLM.

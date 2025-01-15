@@ -1,12 +1,8 @@
 import os
 import json
-import requests
 import ast
-import re
 import pandas as pd
 from dotenv import load_dotenv
-from typing import List
-
 from openai import OpenAI
 from prompt_manager import NodeManager
 from prompt_manager import PromptManager
@@ -48,8 +44,8 @@ for idx, row in df.iterrows():
         system_prompt = row["system_prompt"]
         convo_history_str = row["convo_history"]
         golden_response_str = row["golden_response"]
-        convo_history = ast.literal_eval(convo_history_str)
-        golden_response = clean_response(ast.literal_eval(golden_response_str))
+        convo_history = json.loads(convo_history_str)
+        golden_response = clean_response(golden_response_str)
         if not convo_history:
             print(f"Row {idx}: Empty conversation history. Skipping.")
             semantic_similarities.append(None)
@@ -57,7 +53,6 @@ for idx, row in df.iterrows():
 
         messages = [
             convo_history[0],
-            convo_history[1],
         ]  # Add the first user message
         generated_response = None
 
@@ -66,18 +61,30 @@ for idx, row in df.iterrows():
         current_navi_map = format_flow_steps(navigation_map)
         step = 0
 
-        i = 1
+        i = 0
         while i < len(convo_history):
             turn = messages[i]
 
-            if turn["role"] == "assistant":
-                step = call_llm_to_find_step(turn["content"], messages, navigation_map)
-                # 3) Convert step to integer
-                try:
-                    step_identifier = int(re.findall(r"\d+", step)[0])
-                except Exception:
-                    print("Error converting step to integer. Using 0.")
-                    step_identifier = 0
+            if turn["role"] == "user":
+                user_msg = turn["content"]
+                assistant_reply = call_llm(current_system_prompt, messages, user_msg)
+                assistant_reply = clean_response(assistant_reply)
+                generated_response = assistant_reply
+                messages.append({"role": "assistant", "content": assistant_reply})
+                print("X" * 50)
+                print("Map we are using:", current_navi_map)
+                print("System prompt we are using:", current_system_prompt)
+            else:
+                current_step = call_llm_to_find_step(
+                    turn["content"], messages, navigation_map
+                )
+                if current_step != -1 and current_step != "-1":
+                    try:
+                        step_identifier = int(current_step)
+                        step = current_step
+                    except Exception:
+                        print("Error converting step to integer. Using previous step.")
+                        step_identifier = int(step)
 
                 # 4) Build submap and update system prompt
                 submap = node_manager.get_submap_upto_node(step_identifier)
@@ -90,15 +97,13 @@ for idx, row in df.iterrows():
                 )
                 if i + 1 < len(convo_history):
                     messages.append(convo_history[i + 1])  # Add the next user message
-            elif turn["role"] == "user":
-                user_msg = turn["content"]
-                assistant_reply = call_llm(current_system_prompt, messages, user_msg)
-                assistant_reply = clean_response(assistant_reply)
-                generated_response = assistant_reply
-                messages.append({"role": "assistant", "content": assistant_reply})
-                print("X" * 50)
-                print("Map we are using:", current_navi_map)
-                print("System prompt we are using:", current_system_prompt)
+
+                last_node_type = node_manager.full_map[step_identifier]
+                if "terminate" in str(last_node_type):
+                    print(
+                        "--------------------- Conversation ended. ---------------------"
+                    )
+                    break
             i += 1
 
         # Evaluate similarity
@@ -106,7 +111,7 @@ for idx, row in df.iterrows():
             generated_response, golden_response
         )
         print("=====================================================")
-        print(f"Processed row {idx + 1}: Similarity = {similarity_score}")
+        print(f"Processed row {idx}: Similarity = {similarity_score}")
         print(
             f"Generated response: {generated_response}\nGolden response: {golden_response}\n"
         )
