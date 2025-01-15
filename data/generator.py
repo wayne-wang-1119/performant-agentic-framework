@@ -209,7 +209,7 @@ def simulate_conversation(goal, system_prompt, navigation_map):
             assistant_response, conversation_history, navigation_map
         )
 
-        if last_step_str != -1:
+        if last_step_str != -1 and last_step_str != "-1":
             print(f"Last step: {last_step_str}")
             if type(last_step_str) == str:
                 try:
@@ -226,7 +226,6 @@ def simulate_conversation(goal, system_prompt, navigation_map):
             user_prompt = (
                 user_sys_prompt + "\n" + format_user_flow_steps(navigation_map)
             )
-
             last_node_type = node_manager.full_map[last_step]
             if "terminate" in str(last_node_type):
                 print("--------------------- Conversation ended. ---------------------")
