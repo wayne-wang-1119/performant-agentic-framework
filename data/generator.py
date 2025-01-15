@@ -5,7 +5,7 @@ from prompt_manager import PromptManager
 import random
 import os
 from dotenv import load_dotenv
-
+import json
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -209,12 +209,12 @@ def simulate_conversation(goal, system_prompt, navigation_map):
             assistant_response, conversation_history, navigation_map
         )
 
-        if last_step_str != "-1":
+        if last_step_str != -1:
             print(f"Last step: {last_step_str}")
             if type(last_step_str) == str:
                 try:
-                    last_step = int(re.findall(r"\d+", last_step_str)[0])
-                except Exception:     
+                    last_step = int(last_step_str)
+                except Exception:
                     print("Error converting step to integer. Using 0.")
             else:
                 last_step = last_step_str
@@ -291,7 +291,7 @@ for goal in user_goals:
 # Create a DataFrame
 data = {
     "System Prompt": [system_prompt] * len(conversations),
-    "Conversation History": conversations,
+    "Conversation History": [json.dumps(conv) for conv in conversations],
     "Golden Response": golden_responses,
 }
 df = pd.DataFrame(data)

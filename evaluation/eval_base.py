@@ -74,7 +74,7 @@ for idx, row in df.iterrows():
                 step = call_llm_to_find_step(turn["content"], messages, navigation_map)
                 # 3) Convert step to integer
                 try:
-                    step_identifier = int(re.findall(r"\d+", step)[0])
+                    step_identifier = int(step)
                 except Exception:
                     print("Error converting step to integer. Using 0.")
                     step_identifier = 0
