@@ -49,7 +49,7 @@ for idx, row in df.iterrows():
         system_prompt = row["system_prompt"]
         convo_history_str = row["convo_history"]
         golden_response_str = row["golden_response"]
-        convo_history = ast.literal_eval(convo_history_str)
+        convo_history = json.loads(convo_history_str)
         golden_response = clean_response(ast.literal_eval(golden_response_str))
         if not convo_history:
             print(f"Row {idx}: Empty conversation history. Skipping.")
@@ -84,11 +84,12 @@ for idx, row in df.iterrows():
                     messages.append(convo_history[i + 1])  # Add the next user message
 
                 step = call_llm_to_find_step(turn["content"], messages, navigation_map)
-                try:
-                    step_identifier = int(re.findall(r"\d+", step)[0])
-                except Exception:
-                    print("Error converting step to integer. Using 0.")
-                    step_identifier = 0
+                if last_step_str != -1 and last_step_str != "-1":
+                    try:
+                        step_identifier = int(re.findall(r"\d+", step)[0])
+                    except Exception:
+                        print("Error converting step to integer. Using 0.")
+                        step_identifier = 0
                 last_node_type = node_manager.full_map[step_identifier]
                 if "terminate" in str(last_node_type):
                     print(

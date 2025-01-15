@@ -73,7 +73,7 @@ for idx, row in df.iterrows():
         system_prompt = row["system_prompt"]
         convo_history_str = row["convo_history"]
         golden_response_str = row["golden_response"]
-        convo_history = ast.literal_eval(convo_history_str)
+        convo_history = json.loads(convo_history_str)
         golden_response = clean_response(ast.literal_eval(golden_response_str))
 
         if not convo_history:
@@ -121,12 +121,13 @@ for idx, row in df.iterrows():
                     step = llm_step_str
                     print("Using LLM method for step:", llm_step_str)
 
-                # 3) Convert step to integer
-                try:
-                    step_identifier = int(step)
-                except Exception:
-                    print("Error converting step to integer. Using 0.")
-                    step_identifier = 0
+                if last_step_str != -1 and last_step_str != "-1":
+                    # 3) Convert step to integer
+                    try:
+                        step_identifier = int(step)
+                    except Exception:
+                        print("Error converting step to integer. Using 0.")
+                        step_identifier = 0
 
                 # 4) Build submap and update system prompt
                 submap = node_manager.get_submap_upto_node(step_identifier)
