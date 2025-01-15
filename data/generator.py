@@ -211,7 +211,12 @@ def simulate_conversation(goal, system_prompt, navigation_map):
         if last_step_str != "-1":
             print(f"Last step: {last_step_str}")
             if type(last_step_str) == str:
-                last_step = int(last_step_str)
+                try:
+                    last_step = int(re.findall(r"\d+", last_step_str)[0])
+                except Exception:     
+                    print("Error converting step to integer. Using 0.")
+            else:
+                last_step = last_step_str
             # Update the navigation map based on the last step
             navigation_map = node_manager.get_submap_upto_node(last_step)
             assistant_prompt = (
