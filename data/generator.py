@@ -157,6 +157,7 @@ def simulate_conversation(goal, system_prompt, navigation_map):
     user_sys_prompt += f"The available options for you to continue the conversation based on the currrent options are:"
     user_prompt = user_sys_prompt + "\n" + format_user_flow_steps(navigation_map)
     random_turns = random.randint(6, 10)
+    last_step = 0
     model = "gpt-4o"  # Specify your model
     print("=====================================================")
     for _ in range(random_turns):
