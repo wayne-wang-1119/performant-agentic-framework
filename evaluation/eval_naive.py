@@ -84,7 +84,7 @@ for idx, row in df.iterrows():
                     messages.append(convo_history[i + 1])  # Add the next user message
 
                 step = call_llm_to_find_step(turn["content"], messages, navigation_map)
-                if last_step_str != -1 and last_step_str != "-1":
+                if step != -1 and step != "-1":
                     try:
                         step_identifier = int(re.findall(r"\d+", step)[0])
                     except Exception:

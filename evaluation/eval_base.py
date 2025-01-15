@@ -73,7 +73,7 @@ for idx, row in df.iterrows():
             if turn["role"] == "assistant":
                 step = call_llm_to_find_step(turn["content"], messages, navigation_map)
                 # 3) Convert step to integer
-                if last_step_str != -1 and last_step_str != "-1":
+                if step != -1 and step != "-1":
                     try:
                         step_identifier = int(step)
                     except Exception:

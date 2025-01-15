@@ -121,7 +121,7 @@ for idx, row in df.iterrows():
                     step = llm_step_str
                     print("Using LLM method for step:", llm_step_str)
 
-                if last_step_str != -1 and last_step_str != "-1":
+                if step != -1 and step != "-1":
                     # 3) Convert step to integer
                     try:
                         step_identifier = int(step)
