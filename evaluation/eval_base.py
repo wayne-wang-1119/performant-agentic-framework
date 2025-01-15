@@ -113,7 +113,7 @@ for idx, row in df.iterrows():
             generated_response, golden_response
         )
         print("=====================================================")
-        print(f"Processed row {idx + 1}: Similarity = {similarity_score}")
+        print(f"Processed row {idx}: Similarity = {similarity_score}")
         print(
             f"Generated response: {generated_response}\nGolden response: {golden_response}\n"
         )
