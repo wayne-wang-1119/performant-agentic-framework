@@ -133,6 +133,7 @@ def format_ai_flow_steps(flow_map):
         lines.append(line)
     return "\n".join(lines)
 
+
 def format_convo_history(conversation_history):
     """
     Given a conversation history, format it as a string for display.
@@ -143,6 +144,7 @@ def format_convo_history(conversation_history):
         content = turn["content"]
         formatted_history += f"{"Caller" if role == "user" else "Agent"}: {content}\n"
     return formatted_history
+
 
 # Function to simulate conversation using LLM
 def simulate_conversation(goal, system_prompt, navigation_map):
@@ -164,7 +166,11 @@ def simulate_conversation(goal, system_prompt, navigation_map):
                 model=model,
                 messages=[
                     {"role": "system", "content": user_prompt},
-                    {"role": "system", "content": "Current conversation history:" + format_convo_history(conversation_history)},
+                    {
+                        "role": "system",
+                        "content": "Current conversation history:"
+                        + format_convo_history(conversation_history),
+                    },
                     {
                         "role": "system",
                         "content": "Your turn to respond. Keep in mind that you are the caller, which is the user in the conversation history so far, instead of the assistant.",
@@ -206,8 +212,12 @@ def simulate_conversation(goal, system_prompt, navigation_map):
             print(f"Last step: {last_step}")
             # Update the navigation map based on the last step
             navigation_map = node_manager.get_submap_upto_node(int(last_step))
-            assistant_prompt = system_prompt + "\n" + format_ai_flow_steps(navigation_map)
-            user_prompt = user_sys_prompt + "\n" + format_user_flow_steps(navigation_map)
+            assistant_prompt = (
+                system_prompt + "\n" + format_ai_flow_steps(navigation_map)
+            )
+            user_prompt = (
+                user_sys_prompt + "\n" + format_user_flow_steps(navigation_map)
+            )
 
         # Store golden response
         golden_response = assistant_response
@@ -222,9 +232,18 @@ def simulate_conversation(goal, system_prompt, navigation_map):
 # Function to determine the golden response based on the navigation map and the last agent message
 def determine_golden_response(conversation_history, navigation_map):
     last_agent_message = conversation_history[-1]["content"]
+    prompt = (
+        f"Given the following navigation map and conversation history, "
+        f"identify which node the agent is currently on based on its last message. "
+        f"The navigation map outlines the agent's possible instructions and corresponding node IDs. "
+        f"If the user requests a different service, the response should correspond to the relevant transfer node. "
+        f"Always return only the original instruction from the identified node. "
+        f"If no matching instruction exists, return an empty string.\n\n"
+        f"Navigation Map:\n{navigation_map}\n\n"
+        f"Conversation History:\n{format_convo_history(conversation_history)}\n\n"
+        f"Return only the node instruction that the agent last delivered from the navigation map."
+    )
 
-    prompt = f"Based on the following navigation map and system prompt, identify the node instruction that most closely aligns with the last agent message. If the user requests a different service, ensure the golden response corresponds to the transfer node. Always and only return the original instruction of the node that is being said by the Agent, if it does not exist then return empty string. Do not return anything else. System Prompt:\n{navigation_map}\n\nLast Agent Message:\n{last_agent_message}\n"
-    prompt = f"The conversation history is: {format_convo_history(conversation_history)}\n\n You should only return the node instructions with the "  # Add a new line for separation
     model = "gpt-4o"
     golden_response = (
         client.chat.completions.create(
@@ -247,8 +266,12 @@ golden_responses = []
 
 for goal in user_goals:
     for _ in range(10):  # Simulate 10 conversations per goal, totaling 50 conversations
-        convo_history, updated_navigation_map = simulate_conversation(goal, system_prompt, navigation_map)
-        golden_response = determine_golden_response(convo_history, updated_navigation_map)
+        convo_history, updated_navigation_map = simulate_conversation(
+            goal, system_prompt, navigation_map
+        )
+        golden_response = determine_golden_response(
+            convo_history, updated_navigation_map
+        )
         conversations.append(convo_history)
         golden_responses.append(golden_response)
 
