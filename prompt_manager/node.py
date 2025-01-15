@@ -458,3 +458,14 @@ class NodeManager:
             filtered_map[node_id] = self.full_map[node_id]
 
         return filtered_map
+
+    def get_children(self, node_id: int) -> List[int]:
+        node_data = self.full_map.get(node_id, {})
+        navigation = node_data.get("navigation", {})
+        if isinstance(navigation, dict):
+            children = [
+                child for child in navigation.values() if isinstance(child, int)
+            ]
+            return children
+        else:
+            return []

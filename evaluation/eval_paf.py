@@ -22,7 +22,9 @@ navigation_map = node_manager.get_submap_upto_node(0)
 prompt_manager = PromptManager(node_manager)
 
 
-def find_step_with_vectors(assistant_message: str) -> Tuple[int, float]:
+def find_step_with_vectors(
+    assistant_message: str, current_node_id: int
+) -> Tuple[int, float]:
     """
     Vectorize assistant_message and compare it to each node's embedding
     using the dot product or cosine similarity.
@@ -34,16 +36,18 @@ def find_step_with_vectors(assistant_message: str) -> Tuple[int, float]:
     best_node_id = None
     best_score = float("-inf")
 
-    # Compare to each node embedding in node_manager
+    # Compare to each child node embedding in node_manager
     for node_id, node_emb in node_manager.node_embeddings.items():
         # Use dot product
-        score = dot_product(embedding, node_emb)
-        if score > best_score:
-            best_score = score
-            best_node_id = node_id
+        all_children_ids = node_manager.get_children(node_id)
+        if node_id in all_children_ids:
+            score = dot_product(embedding, node_emb)
+            if score > best_score:
+                best_score = score
+                best_node_id = node_id
 
     # If best_score > 0.96, we consider that "good enough"; otherwise we return None
-    if best_score > 0.96:
+    if best_score > 0.8:
         return best_node_id, best_score
     return None, 0.0
 
@@ -110,7 +114,7 @@ for idx, row in df.iterrows():
 
                 # 1) Step finder logic: vector method + LLM method, parallel both to optimize latency
                 vector_step_id, vector_step_score = find_step_with_vectors(
-                    assistant_msg
+                    assistant_msg, step
                 )
                 llm_step_str = call_llm_to_find_step(
                     assistant_msg, messages, current_navi_map
