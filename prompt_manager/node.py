@@ -1,7 +1,9 @@
 import os
-import json
 import requests
 from typing import List, Dict, Any
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def vectorize_prompt(model: str, prompt_text: str) -> List[float]:
