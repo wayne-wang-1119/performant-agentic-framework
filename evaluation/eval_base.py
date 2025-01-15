@@ -66,7 +66,16 @@ for idx, row in df.iterrows():
         while i < len(convo_history):
             turn = messages[i]
 
-            if turn["role"] == "assistant":
+            if turn["role"] == "user":
+                user_msg = turn["content"]
+                assistant_reply = call_llm(current_system_prompt, messages, user_msg)
+                assistant_reply = clean_response(assistant_reply)
+                generated_response = assistant_reply
+                messages.append({"role": "assistant", "content": assistant_reply})
+                print("X" * 50)
+                print("Map we are using:", current_navi_map)
+                print("System prompt we are using:", current_system_prompt)
+            else:
                 current_step = call_llm_to_find_step(
                     turn["content"], messages, navigation_map
                 )
@@ -96,15 +105,6 @@ for idx, row in df.iterrows():
                         "--------------------- Conversation ended. ---------------------"
                     )
                     break
-            elif turn["role"] == "user":
-                user_msg = turn["content"]
-                assistant_reply = call_llm(current_system_prompt, messages, user_msg)
-                assistant_reply = clean_response(assistant_reply)
-                generated_response = assistant_reply
-                messages.append({"role": "assistant", "content": assistant_reply})
-                print("X" * 50)
-                print("Map we are using:", current_navi_map)
-                print("System prompt we are using:", current_system_prompt)
             i += 1
 
         # Evaluate similarity
