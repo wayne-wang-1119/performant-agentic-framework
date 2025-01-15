@@ -42,6 +42,7 @@ def find_step_with_vectors(
         all_children_ids = node_manager.get_children(node_id)
         if node_id in all_children_ids:
             score = dot_product(embedding, node_emb)
+            print(f"Vector Node {node_id}: {score}")
             if score > best_score:
                 best_score = score
                 best_node_id = node_id
