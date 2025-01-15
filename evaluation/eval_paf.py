@@ -80,7 +80,6 @@ for idx, row in df.iterrows():
 
         messages = [
             convo_history[0],
-            convo_history[1],
         ]  # Add the first user message
         generated_response = None
 
@@ -89,7 +88,7 @@ for idx, row in df.iterrows():
         current_navi_map = format_flow_steps(navigation_map)
         step = 0
 
-        i = 1
+        i = 0
         while i < len(convo_history):
             turn = messages[i]
 
