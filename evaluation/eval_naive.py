@@ -83,6 +83,18 @@ for idx, row in df.iterrows():
                 if i + 1 < len(convo_history):
                     messages.append(convo_history[i + 1])  # Add the next user message
 
+                step = call_llm_to_find_step(turn["content"], messages, navigation_map)
+                try:
+                    step_identifier = int(re.findall(r"\d+", step)[0])
+                except Exception:
+                    print("Error converting step to integer. Using 0.")
+                    step_identifier = 0
+                last_node_type = node_manager.full_map[step_identifier]
+                if "terminate" in str(last_node_type):
+                    print(
+                        "--------------------- Conversation ended. ---------------------"
+                    )
+                    break
             i += 1
         # Now, after processing all user messages, generated_response should hold
         # the *last* assistant response from the LLM.

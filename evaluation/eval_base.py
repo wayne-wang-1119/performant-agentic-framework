@@ -90,6 +90,13 @@ for idx, row in df.iterrows():
                 )
                 if i + 1 < len(convo_history):
                     messages.append(convo_history[i + 1])  # Add the next user message
+
+                last_node_type = node_manager.full_map[step_identifier]
+                if "terminate" in str(last_node_type):
+                    print(
+                        "--------------------- Conversation ended. ---------------------"
+                    )
+                    break
             elif turn["role"] == "user":
                 user_msg = turn["content"]
                 assistant_reply = call_llm(current_system_prompt, messages, user_msg)
