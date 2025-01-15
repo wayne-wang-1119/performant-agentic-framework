@@ -1,11 +1,8 @@
 import os
 import json
-import requests
 import ast
-import re
 import pandas as pd
 from dotenv import load_dotenv
-from typing import List
 
 from openai import OpenAI
 from prompt_manager import NodeManager
@@ -49,7 +46,7 @@ for idx, row in df.iterrows():
         convo_history_str = row["convo_history"]
         golden_response_str = row["golden_response"]
         convo_history = json.loads(convo_history_str)
-        golden_response = clean_response(ast.literal_eval(golden_response_str))
+        golden_response = clean_response(golden_response_str)
         if not convo_history:
             print(f"Row {idx}: Empty conversation history. Skipping.")
             semantic_similarities.append(None)
