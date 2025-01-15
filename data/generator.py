@@ -204,14 +204,16 @@ def simulate_conversation(goal, system_prompt, navigation_map):
         )
         print(f"Assistant: {assistant_response}")
 
-        last_step = call_llm_to_find_step(
+        last_step_str = call_llm_to_find_step(
             assistant_response, conversation_history, navigation_map
         )
 
-        if last_step != -1:
-            print(f"Last step: {last_step}")
+        if last_step_str != "-1":
+            print(f"Last step: {last_step_str}")
+            if type(last_step_str) == str:
+                last_step = int(last_step_str)
             # Update the navigation map based on the last step
-            navigation_map = node_manager.get_submap_upto_node(int(last_step))
+            navigation_map = node_manager.get_submap_upto_node(last_step)
             assistant_prompt = (
                 system_prompt + "\n" + format_ai_flow_steps(navigation_map)
             )
