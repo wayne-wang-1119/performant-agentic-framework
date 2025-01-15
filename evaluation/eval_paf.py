@@ -95,7 +95,18 @@ for idx, row in df.iterrows():
 
             # If the turn is from the assistant (dataset's assistant),
             # we add it to the conversation context, then run the step-finder.
-            if turn["role"] == "assistant":
+            if turn["role"] == "user":
+                user_msg = turn["content"]
+                assistant_reply = call_llm(current_system_prompt, messages, user_msg)
+                assistant_reply = clean_response(assistant_reply)
+
+                generated_response = assistant_reply
+                messages.append({"role": "assistant", "content": assistant_reply})
+
+                print("X" * 50)
+                print("Map we are using:", current_navi_map)
+                print("System prompt we are using:", current_system_prompt)
+            else:
                 assistant_msg = turn["content"]
 
                 # 1) Step finder logic: vector method + LLM method, parallel both to optimize latency
@@ -144,18 +155,6 @@ for idx, row in df.iterrows():
                         "--------------------- Conversation ended. ---------------------"
                     )
                     break
-
-            elif turn["role"] == "user":
-                user_msg = turn["content"]
-                assistant_reply = call_llm(current_system_prompt, messages, user_msg)
-                assistant_reply = clean_response(assistant_reply)
-
-                generated_response = assistant_reply
-                messages.append({"role": "assistant", "content": assistant_reply})
-
-                print("X" * 50)
-                print("Map we are using:", current_navi_map)
-                print("System prompt we are using:", current_system_prompt)
 
             i += 1
 
