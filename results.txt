@@ -1,6 +1,6 @@
-Base vs Naive: t-statistic = 2.8288, one-sided p-value = 0.0040
+Base vs Naive: t-statistic = 2.5574, one-sided p-value = 0.0077
 Result: Statistically significant (p < 0.05). Base is better than Naive.
-PAF vs Naive: t-statistic = 4.5894, one-sided p-value = 0.0000
+PAF vs Naive: t-statistic = 4.1551, one-sided p-value = 0.0001
 Result: Statistically significant (p < 0.05). PAF is better than Naive.
-PAF vs Base: t-statistic = 2.5338, one-sided p-value = 0.0073
+PAF vs Base: t-statistic = 2.1024, one-sided p-value = 0.0203
 Result: Statistically significant (p < 0.05). PAF is better than Base.
