@@ -27,6 +27,7 @@ This is a table of contents for your project. It helps the reader navigate throu
 - [Table of Contents](#table-of-contents)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Results](#results)
 - [Contribute](#contribute)
 - [License](#license)
 
@@ -93,6 +94,31 @@ python -m evaluation.eval_naive
 ```
 
 The same goes for the other evaluation scripts
+
+# Results
+
+[(Back to top)](#table-of-contents)
+
+
+1. CSV Results: data/cross_eval.csv
+
+![Cross Eval Dataset](./data/cross_eval.csv)
+
+Contains cross-evaluation statistics of the Agent's responses against the Golden responses. The key metric is `total_complete_hit` which indicates a similarity score above 0.97, and the total number of `counte_above_0.8`, which indicates the conversation adheres to the guardrail with high frequency. 
+
+2. Graphical Results: data/similarity_distributions.png
+
+![Cross Eval Graph](./data/similarity_distributions.png)
+
+A visualization of similarity distributions between the Agent's responses and the Golden responses across three different approaches.
+
+Text Results: result.txt
+
+![Cross Eval Stats](./result.txt)
+
+Contains a summary of the experiment results, using paired T-test we found t-statistics and p-val.
+
+
 
 # Contribute
 
