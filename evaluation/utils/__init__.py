@@ -110,47 +110,47 @@ def compute_semantic_similarity(response_1, response_2):
     return similarity
 
 
-def call_llm_to_find_step(assistant_message, conversation_history, navigation_map):
+def call_llm_to_find_node(assistant_message, conversation_history, navigation_map):
     """
-    Call the LLM to find the step or the Node ID that the agent is on currently
+    Call the LLM to find the node or the Node ID that the agent is on currently
     based on the latest assistant message and conversation history.
     """
     messages = [
         {
             "role": "system",
             "content": (
-                "You are identifying which Node ID or step number most closely "
+                "You are identifying which Node ID or node number most closely "
                 "aligns with the latest assistant message. Return only the digit "
-                "that represents the Step/Node ID."
+                "that represents the Node/Node ID."
             ),
         },
         {
             "role": "system",
             "content": """`
 ### Task Instructions:
-You must identify the step from the navigation map that is **most similar** to the assistant's last response. The similarity should be based on the following criteria, in order of priority:
+You must identify the node from the navigation map that is **most similar** to the assistant's last response. The similarity should be based on the following criteria, in order of priority:
 1. **Intent**: Match the primary purpose or action of the assistant's last response (e.g., confirming a name, providing an explanation, asking for information, etc.).
 2. **Key Phrases**: Look for specific keywords or actions mentioned in the assistant's last response (e.g., "confirm," "name," "phone number").
-3. **Context Alignment**: Consider how the assistant's last response aligns with the expected outcomes or instructions for each step in the navigation map.
+3. **Context Alignment**: Consider how the assistant's last response aligns with the expected outcomes or instructions for each node in the navigation map.
 
-### Steps to Determine the Most Similar Step:
+### Steps to Determine the Most Similar Node:
 1. **Understand the Assistant's Intent**: Analyze the assistant's last response to identify what action it is performing (e.g., confirming a name, asking for details, etc.).
-2. **Analyze the Navigation Map**: Compare the intent and key phrases of the assistant's response with the instructions and expected behaviors for each step in the navigation map.
-3. **Choose the Closest Match**: Select the step that most closely matches the intent and key phrases of the assistant's response. 
+2. **Analyze the Navigation Map**: Compare the intent and key phrases of the assistant's response with the instructions and expected behaviors for each node in the navigation map.
+3. **Choose the Closest Match**: Select the node that most closely matches the intent and key phrases of the assistant's response. 
 
-If multiple steps are similar, select the one with the closest **intent match**. Return the step number in JSON format.
+If multiple nodes are similar, select the one with the closest **intent match**. Return the node number in JSON format.
 
 ### Additional Notes:
-- For steps that contain instructions that end the call or indicate ending the call (e.g. "Ok, goodbye for now"), treat them with extra caution when selecting as a response. Since these steps end the call, they should typically appear only once. When you are evaluating potential next steps to return, avoid prematurely ending the call.
-- If the conversation is not advancing to any appropriate step, return -1.
-- When you return a step that is the end call step which has instruction to end the call, you should only return that step if the latest assistant message is clearly the same as the end call message. 
-- You should never return a step with instructions that do not resemble what the latest assistant message tries to achieve.
+- For nodes that contain instructions that end the call or indicate ending the call (e.g. "Ok, goodbye for now"), treat them with extra caution when selecting as a response. Since these nodes end the call, they should typically appear only once. When you are evaluating potential next nodes to return, avoid prematurely ending the call.
+- If the conversation is not advancing to any appropriate node, return -1.
+- When you return a node that is the end call node which has instruction to end the call, you should only return that node if the latest assistant message is clearly the same as the end call message. 
+- You should never return a node with instructions that do not resemble what the latest assistant message tries to achieve.
 
 ---
 
 ### Task:
-Based on the navigation map, return the step that is most similar to what the AI assistant responded with in the last AI Message.
-If the conversation is not advancing to any appropriate step, return -1. 
+Based on the navigation map, return the node that is most similar to what the AI assistant responded with in the last AI Message.
+If the conversation is not advancing to any appropriate node, return -1. 
 You should try to advance the conversation based on the latest assistant message.
 """,
         },
@@ -169,25 +169,25 @@ You should try to advance the conversation based on the latest assistant message
     print("navigation map:", navigation_map)
 
     response = client.chat.completions.create(model="gpt-4o-mini", messages=messages)
-    step_str = response.choices[0].message.content
-    print("LLM response to find step:", step_str)
-    return step_str
+    node_str = response.choices[0].message.content
+    print("LLM response to find node:", node_str)
+    return node_str
 
 
-def format_flow_steps(flow_map):
+def format_flow_nodes(flow_map):
     """
-    Given a dictionary of steps (flow_map), return a string describing
-    each step, its instruction, and its navigation options.
+    Given a dictionary of nodes (flow_map), return a string describing
+    each node, its instruction, and its navigation options.
     """
     lines = []
-    for step_number, step_info in flow_map.items():
-        instruction = step_info.get("instruction", "No instruction found")
-        line = f"On step {step_number} you have instruction '{instruction}'."
+    for node_number, node_info in flow_map.items():
+        instruction = node_info.get("instruction", "No instruction found")
+        line = f"On node {node_number} you have instruction '{instruction}'."
 
-        navigation = step_info.get("navigation")
+        navigation = node_info.get("navigation")
         if isinstance(navigation, dict):
-            for condition, next_step in navigation.items():
-                line += f" Based on condition '{condition}', you can go to step {next_step}."
+            for condition, next_node in navigation.items():
+                line += f" Based on condition '{condition}', you can go to node {next_node}."
         elif isinstance(navigation, str):
             line += f" Navigation action: {navigation}."
         # else: no valid navigation - skip

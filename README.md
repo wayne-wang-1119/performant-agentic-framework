@@ -45,6 +45,7 @@ git clone https://github.com/wayne-wang-1119/performant-agentic-framework.git
 ```bash
 brew install python@3.12
 python3 -m pip install virtualenv
+pip install scipy
 ```
 
 Clone the repository and `cd` into the repository
@@ -63,7 +64,7 @@ You can leverage the PAF repo to: 1. Generate synthetic data that can be used to
 1.  Generate the dataset
 
 ```bash
-python -m data.generator
+python -m data.generator.py
 ```
 
 This will generate a dataset in the `data` folder called dataset.csv with the following columns:

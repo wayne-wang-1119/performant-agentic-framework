@@ -58,8 +58,8 @@ for idx, row in df.iterrows():
 
         # We'll keep a few states that can get updated with submap info
         current_system_prompt = prompt_manager.get()
-        current_navi_map = format_flow_steps(navigation_map)
-        step = 0
+        current_navi_map = format_flow_nodes(navigation_map)
+        node = 0
 
         i = 0
         while i < len(convo_history):
@@ -75,30 +75,30 @@ for idx, row in df.iterrows():
                 print("Map we are using:", current_navi_map)
                 print("System prompt we are using:", current_system_prompt)
             else:
-                current_step = call_llm_to_find_step(
+                current_node = call_llm_to_find_node(
                     turn["content"], messages, navigation_map
                 )
-                if current_step != -1 and current_step != "-1":
+                if current_node != -1 and current_node != "-1":
                     try:
-                        step_identifier = int(current_step)
-                        step = current_step
+                        node_identifier = int(current_node)
+                        node = current_node
                     except Exception:
-                        print("Error converting step to integer. Using previous step.")
-                        step_identifier = int(step)
+                        print("Error converting node to integer. Using previous node.")
+                        node_identifier = int(node)
 
                 # 4) Build submap and update system prompt
-                submap = node_manager.get_submap_upto_node(step_identifier)
-                current_navi_map = format_flow_steps(submap)
+                submap = node_manager.get_submap_upto_node(node_identifier)
+                current_navi_map = format_flow_nodes(submap)
                 current_system_prompt = (
                     f"{current_system_prompt}\n\n"
-                    f"You were at step {step} based on the latest assistant message.\n"
-                    f"Below is a partial navigation map relevant to your current step:\n{current_navi_map}\n\n"
+                    f"You were at node {node} based on the latest assistant message.\n"
+                    f"Below is a partial navigation map relevant to your current node:\n{current_navi_map}\n\n"
                     "Now continue from that context."
                 )
                 if i + 1 < len(convo_history):
                     messages.append(convo_history[i + 1])  # Add the next user message
 
-                last_node_type = node_manager.full_map[step_identifier]
+                last_node_type = node_manager.full_map[node_identifier]
                 if "terminate" in str(last_node_type):
                     print(
                         "--------------------- Conversation ended. ---------------------"

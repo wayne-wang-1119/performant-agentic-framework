@@ -41,7 +41,7 @@ Try to align with the navigation map as much as possible.
 - The child nodes of current node is where you should pick what to say next from. 
 - Use the user's latest input to determine whether the condition to move to the next node has been met.
 - If the condition is not met, you have two options:
-	1. You can reframe your current node's instruction or question, and then ask for clarity
+	1. You can rephrase your current node's instruction or question, and then ask for clarity
 	2. You can move to one of the potential nodes given in the map that is most appropriate
 You should make your decision based on the user input and conversation context.
 
