@@ -112,7 +112,7 @@ Contains cross-evaluation statistics of the Agent's responses against the Golden
 
 A visualization of similarity distributions between the Agent's responses and the Golden responses across three different approaches.
 
-Text Results: result.txt
+High Level Statistics: result.txt
 
 [Cross Eval Stats](./result.txt)
 
