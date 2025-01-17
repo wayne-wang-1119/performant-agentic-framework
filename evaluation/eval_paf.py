@@ -22,7 +22,7 @@ navigation_map = node_manager.get_submap_upto_node(0)
 prompt_manager = PromptManager(node_manager)
 
 
-def find_step_with_vectors(
+def find_node_with_vectors(
     assistant_message: str, current_node_id: int
 ) -> Tuple[int, float]:
     """
@@ -90,15 +90,15 @@ for idx, row in df.iterrows():
 
         # We'll keep a few states that can get updated with submap info
         current_system_prompt = prompt_manager.get()
-        current_navi_map = format_flow_steps(navigation_map)
-        step = 0
+        current_navi_map = format_flow_nodes(navigation_map)
+        node = 0
 
         i = 0
         while i < len(convo_history):
             turn = messages[i]
 
             # If the turn is from the assistant (dataset's assistant),
-            # we add it to the conversation context, then run the step-finder.
+            # we add it to the conversation context, then run the node-finder.
             if turn["role"] == "user":
                 user_msg = turn["content"]
                 assistant_reply = call_llm(current_system_prompt, messages, user_msg)
@@ -113,47 +113,47 @@ for idx, row in df.iterrows():
             else:
                 assistant_msg = turn["content"]
 
-                # 1) Step finder logic: vector method + LLM method, parallel both to optimize latency
-                vector_step_id, vector_step_score = find_step_with_vectors(
-                    assistant_msg, step
+                # 1) Node finder logic: vector method + LLM method, parallel both to optimize latency
+                vector_node_id, vector_node_score = find_node_with_vectors(
+                    assistant_msg, node
                 )
-                llm_step_str = call_llm_to_find_step(
+                llm_node_str = call_llm_to_find_node(
                     assistant_msg, messages, current_navi_map
                 )
 
-                # 2) Decide which step to use (vector vs LLM)
-                if vector_step_id is not None:
-                    current_step = str(vector_step_id)
+                # 2) Decide which node to use (vector vs LLM)
+                if vector_node_id is not None:
+                    current_node = str(vector_node_id)
                     print(
-                        "Using vector method for step:",
-                        vector_step_id,
-                        vector_step_score,
+                        "Using vector method for node:",
+                        vector_node_id,
+                        vector_node_score,
                     )
                 else:
-                    current_step = llm_step_str
-                    print("Using LLM method for step:", llm_step_str)
+                    current_node = llm_node_str
+                    print("Using LLM method for node:", llm_node_str)
 
-                if current_step != -1 and current_step != "-1":
+                if current_node != -1 and current_node != "-1":
                     try:
-                        step_identifier = int(current_step)
-                        step = current_step
+                        node_identifier = int(current_node)
+                        node = current_node
                     except Exception:
-                        print("Error converting step to integer. Using previous step.")
-                        step_identifier = int(step)
+                        print("Error converting node to integer. Using previous node.")
+                        node_identifier = int(node)
 
                 # 4) Build submap and update system prompt
-                submap = node_manager.get_submap_upto_node(step_identifier)
-                current_navi_map = format_flow_steps(submap)
+                submap = node_manager.get_submap_upto_node(node_identifier)
+                current_navi_map = format_flow_nodes(submap)
                 current_system_prompt = (
                     f"{current_system_prompt}\n\n"
-                    f"You were at step {step} based on the latest assistant message.\n"
-                    f"Below is a partial navigation map relevant to your current step:\n{current_navi_map}\n\n"
+                    f"You were at node {node} based on the latest assistant message.\n"
+                    f"Below is a partial navigation map relevant to your current node:\n{current_navi_map}\n\n"
                     "Now continue from that context."
                 )
                 if i + 1 < len(convo_history):
                     messages.append(convo_history[i + 1])  # Add the next user message
 
-                last_node_type = node_manager.full_map[step_identifier]
+                last_node_type = node_manager.full_map[node_identifier]
                 if "terminate" in str(last_node_type):
                     print(
                         "--------------------- Conversation ended. ---------------------"
