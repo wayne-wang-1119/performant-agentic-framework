@@ -102,7 +102,7 @@ The same goes for the other evaluation scripts
 
 1. CSV Results: data/cross_eval.csv
 
-![Cross Eval Dataset](./data/cross_eval.csv)
+[Cross Eval Dataset](./data/cross_eval.csv)
 
 Contains cross-evaluation statistics of the Agent's responses against the Golden responses. The key metric is `total_complete_hit` which indicates a similarity score above 0.97, and the total number of `counte_above_0.8`, which indicates the conversation adheres to the guardrail with high frequency. 
 
@@ -114,7 +114,7 @@ A visualization of similarity distributions between the Agent's responses and th
 
 Text Results: result.txt
 
-![Cross Eval Stats](./result.txt)
+[Cross Eval Stats](./result.txt)
 
 Contains a summary of the experiment results, using paired T-test we found t-statistics and p-val.
 
