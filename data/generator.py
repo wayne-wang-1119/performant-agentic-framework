@@ -241,6 +241,7 @@ def simulate_conversation(goal, system_prompt, navigation_map):
 
         print(f"Final User: {user_response}")
         print(f"Final Assistant: {assistant_response}")
+        print(f"Golder Response: {golden_response}")
     print("=====================================================")
 
     return conversation_history, navigation_map
@@ -248,7 +249,6 @@ def simulate_conversation(goal, system_prompt, navigation_map):
 
 # Function to determine the golden response based on the navigation map and the last agent message
 def determine_golden_response(conversation_history, navigation_map):
-    last_agent_message = conversation_history[-1]["content"]
     prompt = (
         f"Given the following navigation map and conversation history, "
         f"identify which node the agent is currently on based on its last message. "
