@@ -466,6 +466,7 @@ class NodeManager:
             children = [
                 child for child in navigation.values() if isinstance(child, int)
             ]
+            children.append(node_id)  # Include self in children
             return children
         else:
             return []

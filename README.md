@@ -1,4 +1,3 @@
-
 ![Awesome ReadME](https://media.licdn.com/dms/image/v2/D5616AQGHD9BS-MxP6A/profile-displaybackgroundimage-shrink_350_1400/profile-displaybackgroundimage-shrink_350_1400/0/1719351839679?e=1742428800&v=beta&t=RsX9uLGbWrhOcwdqOyGnadSrm5IGqUItSG5sQaLOFBk)
 
 # Performant Agentic Framework: Alignment First LLM Agentic Workflow
@@ -10,7 +9,7 @@ Arena experiment code for Performant Agentic Framework (PAF), including the data
 To use the dataset to generate Golden vs. Response Dataset, run
 
 ```bash
-python -m data.generator.py
+python -m data.generator
 ```
 
 To use the evaluation script, run
@@ -22,6 +21,7 @@ python main.py
 # Table of Contents
 
 This is a table of contents for your project. It helps the reader navigate through the README quickly.
+
 - [Project Title](#project-title)
 - [Quick Start Demo](#quick-start-demo)
 - [Table of Contents](#table-of-contents)
@@ -30,8 +30,8 @@ This is a table of contents for your project. It helps the reader navigate throu
 - [Contribute](#contribute)
 - [License](#license)
 
-
 # Installation
+
 [(Back to top)](#table-of-contents)
 
 1. To install the repo, run:
@@ -57,14 +57,15 @@ pip install -r requirements.txt
 ```
 
 # Usage
+
 [(Back to top)](#table-of-contents)
 
-You can leverage the PAF repo to: 1. Generate synthetic data that can be used to evaluate Agentic Performance in a simulated live environment, or 2. Run evaluation scripts to benchmark different methods of navigating through a logic tree and see the results of Agent performance. 
+You can leverage the PAF repo to: 1. Generate synthetic data that can be used to evaluate Agentic Performance in a simulated live environment, or 2. Run evaluation scripts to benchmark different methods of navigating through a logic tree and see the results of Agent performance.
 
 1.  Generate the dataset
 
 ```bash
-python -m data.generator.py
+python -m data.generator
 ```
 
 This will generate a dataset in the `data` folder called dataset.csv with the following columns:
@@ -93,17 +94,14 @@ python -m evaluation.eval_naive
 
 The same goes for the other evaluation scripts
 
-
-
 # Contribute
+
 [(Back to top)](#table-of-contents)
 
 Feel free to contribute to our project
 
-
 # License
+
 [(Back to top)](#table-of-contents)
 
 [MIT license](./LICENSE)
-
-

@@ -25,6 +25,11 @@ user_goals = [
     "Ask about services other than scheduling.",
     "Inquire about customer support that needs to be transferred.",
     "Update contact information.",
+    "Ask about broken parts and repair services.",
+    "Called in because of a voicemail and wants to learn more.",
+    "Ask about pricing and discounts.",
+    "Wants to know about the company's history.",
+    "Frustrated with the service and wants to cancel.",
 ]
 
 
@@ -236,6 +241,7 @@ def simulate_conversation(goal, system_prompt, navigation_map):
 
         print(f"Final User: {user_response}")
         print(f"Final Assistant: {assistant_response}")
+        print(f"Golder Response: {golden_response}")
     print("=====================================================")
 
     return conversation_history, navigation_map
@@ -243,7 +249,6 @@ def simulate_conversation(goal, system_prompt, navigation_map):
 
 # Function to determine the golden response based on the navigation map and the last agent message
 def determine_golden_response(conversation_history, navigation_map):
-    last_agent_message = conversation_history[-1]["content"]
     prompt = (
         f"Given the following navigation map and conversation history, "
         f"identify which node the agent is currently on based on its last message. "
