@@ -1,5 +1,3 @@
-![Awesome ReadME](https://media.licdn.com/dms/image/v2/D5616AQGHD9BS-MxP6A/profile-displaybackgroundimage-shrink_350_1400/profile-displaybackgroundimage-shrink_350_1400/0/1719351839679?e=1742428800&v=beta&t=RsX9uLGbWrhOcwdqOyGnadSrm5IGqUItSG5sQaLOFBk)
-
 # Performant Agentic Framework: Alignment First LLM Agentic Workflow
 
 Arena experiment code for Performant Agentic Framework (PAF), including the dataset.
