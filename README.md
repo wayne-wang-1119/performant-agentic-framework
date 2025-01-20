@@ -110,9 +110,9 @@ Contains cross-evaluation statistics of the Agent's responses against the Golden
 
 A visualization of similarity distributions between the Agent's responses and the Golden responses across three different approaches.
 
-High Level Statistics: result.txt
+High Level Statistics: results.txt
 
-[Cross Eval Stats](./result.txt)
+[Cross Eval Stats](./results.txt)
 
 Contains a summary of the experiment results, using paired T-test we found t-statistics and p-val.
 
