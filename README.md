@@ -20,7 +20,6 @@ python main.py
 
 This is a table of contents for your project. It helps the reader navigate through the README quickly.
 
-- [Project Title](#project-title)
 - [Quick Start Demo](#quick-start-demo)
 - [Table of Contents](#table-of-contents)
 - [Installation](#installation)
