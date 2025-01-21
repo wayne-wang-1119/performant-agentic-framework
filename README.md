@@ -1,10 +1,10 @@
-![Awesome ReadME](https://media.licdn.com/dms/image/v2/D5616AQGHD9BS-MxP6A/profile-displaybackgroundimage-shrink_350_1400/profile-displaybackgroundimage-shrink_350_1400/0/1719351839679?e=1742428800&v=beta&t=RsX9uLGbWrhOcwdqOyGnadSrm5IGqUItSG5sQaLOFBk)
-
 # Performant Agentic Framework: Alignment First LLM Agentic Workflow
 
 Arena experiment code for Performant Agentic Framework (PAF), including the dataset.
 
 # Quick Start Demo
+
+Create a .env file at the top level, add "OPENAI_API_KEY"
 
 To use the dataset to generate Golden vs. Response Dataset, run
 
@@ -18,11 +18,15 @@ To use the evaluation script, run
 python main.py
 ```
 
+To view the statistical results, run
+```bash
+python stat_proof.py
+```
+
 # Table of Contents
 
 This is a table of contents for your project. It helps the reader navigate through the README quickly.
 
-- [Project Title](#project-title)
 - [Quick Start Demo](#quick-start-demo)
 - [Table of Contents](#table-of-contents)
 - [Installation](#installation)
@@ -46,7 +50,6 @@ git clone https://github.com/wayne-wang-1119/performant-agentic-framework.git
 ```bash
 brew install python@3.12
 python3 -m pip install virtualenv
-pip install scipy
 ```
 
 Clone the repository and `cd` into the repository
@@ -112,9 +115,9 @@ Contains cross-evaluation statistics of the Agent's responses against the Golden
 
 A visualization of similarity distributions between the Agent's responses and the Golden responses across three different approaches.
 
-High Level Statistics: result.txt
+High Level Statistics: results.txt
 
-[Cross Eval Stats](./result.txt)
+[Cross Eval Stats](./results.txt)
 
 Contains a summary of the experiment results, using paired T-test we found t-statistics and p-val.
 

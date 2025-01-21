@@ -7,3 +7,4 @@ black
 matplotlib
 seaborn
 requests
+scipy
