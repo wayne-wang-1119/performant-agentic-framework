@@ -16,6 +16,11 @@ To use the evaluation script, run
 python main.py
 ```
 
+To view the statistical results, run
+```bash
+python stat_proof.py
+```
+
 # Table of Contents
 
 This is a table of contents for your project. It helps the reader navigate through the README quickly.
