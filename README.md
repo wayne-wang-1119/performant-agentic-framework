@@ -48,7 +48,6 @@ git clone https://github.com/wayne-wang-1119/performant-agentic-framework.git
 ```bash
 brew install python@3.12
 python3 -m pip install virtualenv
-pip install scipy
 ```
 
 Clone the repository and `cd` into the repository
