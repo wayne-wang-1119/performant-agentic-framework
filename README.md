@@ -4,6 +4,8 @@ Arena experiment code for Performant Agentic Framework (PAF), including the data
 
 # Quick Start Demo
 
+Create a .env file at the top level, add "OPENAI_API_KEY"
+
 To use the dataset to generate Golden vs. Response Dataset, run
 
 ```bash
